@@ -1,0 +1,33 @@
+{
+  "attempt_timestamp": "2026-11-14T21:29:18+00:00",
+  "model_identifier": "gemini-3.8-flash",
+  "input_filename": "calendar_ucsd_edu_student-life.html",
+  "source_url": "https://calendar.ucsd.edu/student-life",
+  "candidate_count": 61,
+  "batch_size": 10,
+  "batch_count": 7,
+  "last_completed_stage": "PREFLIGHT_PASSED",
+  "final_status": "failed",
+  "error_type": "api_error",
+  "error_message": "Gemini API returned an error (ServerError); no retry was attempted.",
+  "raw_response_file": null,
+  "raw_response_files": [],
+  "validated_output_file": null,
+  "request_duration_seconds": 19.581,
+  "http_status_code": 503,
+  "raw_error_message": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+  "failed_stage": "server_response",
+  "failed_batch": 1,
+  "batch_results": [
+    {
+      "batch": 1,
+      "candidate_count": 10,
+      "status": "failed",
+      "request_duration_seconds": 19.581,
+      "http_status_code": 503,
+      "raw_error_message": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "failed_stage": "server_response",
+      "error_type": "api_error"
+    }
+  ]
+}

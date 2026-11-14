@@ -1,0 +1,1285 @@
+{
+  "attempt_timestamp": "2026-11-14T21:43:30+00:00",
+  "model_identifier": "gemini-3.5-flash-lite",
+  "input_filename": "calendar_ucsd_edu_student-life.html",
+  "source_url": "https://calendar.ucsd.edu/student-life",
+  "candidate_count": 61,
+  "batch_size": 1,
+  "batch_count": 61,
+  "last_completed_stage": "VALIDATED_OUTPUT_SAVED",
+  "final_status": "partial_failure",
+  "error_type": "api_error",
+  "error_message": "Gemini API returned an error (ServerError); no retry was attempted.",
+  "raw_response_file": "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_061_raw.json",
+  "raw_response_files": [
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_001_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_002_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_003_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_004_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_005_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_006_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_007_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_008_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_009_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_010_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_011_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_012_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_013_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_014_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_015_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_016_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_018_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_019_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_020_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_021_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_022_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_023_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_024_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_025_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_026_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_027_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_028_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_030_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_031_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_032_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_033_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_034_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_035_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_036_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_037_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_038_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_039_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_040_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_041_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_042_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_043_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_045_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_046_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_047_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_048_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_049_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_050_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_051_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_052_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_053_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_054_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_055_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_056_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_057_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_058_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_059_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_060_raw.json",
+    "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_batch_061_raw.json"
+  ],
+  "validated_output_file": "/Users/miaowenxin/sand-project/data/extraction_runs/20261114T214330_984914Z_08cb43b2_validated.json",
+  "request_duration_seconds": 0.898,
+  "http_status_code": 503,
+  "raw_error_message": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+  "failed_stage": "server_response",
+  "failed_batch": 44,
+  "failed_batches": [
+    17,
+    29,
+    44
+  ],
+  "retry_attempts": 29,
+  "retry_log": [
+    {
+      "batch": 4,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.845,
+      "error_type": "api_error",
+      "http_status_code": 503
+    },
+    {
+      "batch": 15,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.197,
+      "error_type": "api_error",
+      "http_status_code": 503
+    },
+    {
+      "batch": 15,
+      "attempt_number": 2,
+      "next_attempt_number": 3,
+      "delay_seconds": 2.328,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 16,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.949,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 17,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.681,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 17,
+      "attempt_number": 2,
+      "next_attempt_number": 3,
+      "delay_seconds": 2.608,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 17,
+      "attempt_number": 3,
+      "next_attempt_number": 4,
+      "delay_seconds": 4.117,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 17,
+      "attempt_number": 4,
+      "next_attempt_number": 5,
+      "delay_seconds": 8.874,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 19,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.982,
+      "error_type": "api_error",
+      "http_status_code": 503
+    },
+    {
+      "batch": 21,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.002,
+      "error_type": "api_error",
+      "http_status_code": 503
+    },
+    {
+      "batch": 29,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.973,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 29,
+      "attempt_number": 2,
+      "next_attempt_number": 3,
+      "delay_seconds": 2.414,
+      "error_type": "api_error",
+      "http_status_code": 503
+    },
+    {
+      "batch": 29,
+      "attempt_number": 3,
+      "next_attempt_number": 4,
+      "delay_seconds": 4.984,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 29,
+      "attempt_number": 4,
+      "next_attempt_number": 5,
+      "delay_seconds": 8.974,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 31,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.917,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 31,
+      "attempt_number": 2,
+      "next_attempt_number": 3,
+      "delay_seconds": 2.767,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 31,
+      "attempt_number": 3,
+      "next_attempt_number": 4,
+      "delay_seconds": 4.967,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 33,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.084,
+      "error_type": "api_error",
+      "http_status_code": 503
+    },
+    {
+      "batch": 35,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.9,
+      "error_type": "api_error",
+      "http_status_code": 503
+    },
+    {
+      "batch": 44,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.223,
+      "error_type": "api_error",
+      "http_status_code": 503
+    },
+    {
+      "batch": 44,
+      "attempt_number": 2,
+      "next_attempt_number": 3,
+      "delay_seconds": 2.475,
+      "error_type": "api_error",
+      "http_status_code": 503
+    },
+    {
+      "batch": 44,
+      "attempt_number": 3,
+      "next_attempt_number": 4,
+      "delay_seconds": 4.154,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 44,
+      "attempt_number": 4,
+      "next_attempt_number": 5,
+      "delay_seconds": 8.704,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 45,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.988,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 45,
+      "attempt_number": 2,
+      "next_attempt_number": 3,
+      "delay_seconds": 2.792,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 45,
+      "attempt_number": 3,
+      "next_attempt_number": 4,
+      "delay_seconds": 4.633,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 46,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.872,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 61,
+      "attempt_number": 1,
+      "next_attempt_number": 2,
+      "delay_seconds": 1.839,
+      "error_type": "api_error",
+      "http_status_code": 429
+    },
+    {
+      "batch": 61,
+      "attempt_number": 2,
+      "next_attempt_number": 3,
+      "delay_seconds": 2.6,
+      "error_type": "api_error",
+      "http_status_code": 429
+    }
+  ],
+  "batch_results": [
+    {
+      "batch": 1,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 3.677,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 2,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.908,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 3,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.804,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 4,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 4.937,
+      "retry_attempts": 1,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.845,
+          "error_type": "api_error",
+          "http_status_code": 503
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 5,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.808,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 0,
+      "rejected": 1,
+      "http_status_code": 200
+    },
+    {
+      "batch": 6,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.398,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 7,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.565,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 8,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 3.387,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 9,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.874,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 10,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.726,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 0,
+      "rejected": 1,
+      "http_status_code": 200
+    },
+    {
+      "batch": 11,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.65,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 0,
+      "rejected": 1,
+      "http_status_code": 200
+    },
+    {
+      "batch": 12,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 2.437,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 13,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.947,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 14,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.493,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 15,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 8.19,
+      "retry_attempts": 2,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.197,
+          "error_type": "api_error",
+          "http_status_code": 503
+        },
+        {
+          "attempt_number": 2,
+          "next_attempt_number": 3,
+          "delay_seconds": 2.328,
+          "error_type": "api_error",
+          "http_status_code": 429
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 16,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 3.891,
+      "retry_attempts": 1,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.949,
+          "error_type": "api_error",
+          "http_status_code": 429
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 17,
+      "candidate_count": 1,
+      "status": "failed",
+      "request_duration_seconds": 1.187,
+      "retry_attempts": 4,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.681,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 2,
+          "next_attempt_number": 3,
+          "delay_seconds": 2.608,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 3,
+          "next_attempt_number": 4,
+          "delay_seconds": 4.117,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 4,
+          "next_attempt_number": 5,
+          "delay_seconds": 8.874,
+          "error_type": "api_error",
+          "http_status_code": 429
+        }
+      ],
+      "http_status_code": 503,
+      "raw_error_message": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "failed_stage": "server_response",
+      "error_type": "api_error",
+      "error_message": "Gemini API returned an error (ServerError); no retry was attempted."
+    },
+    {
+      "batch": 18,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 2.172,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 19,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 5.024,
+      "retry_attempts": 1,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.982,
+          "error_type": "api_error",
+          "http_status_code": 503
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 20,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.708,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 21,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 4.407,
+      "retry_attempts": 1,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.002,
+          "error_type": "api_error",
+          "http_status_code": 503
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 22,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.916,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 23,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.935,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 24,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 2.097,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 25,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.632,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 26,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.591,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 27,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 2.041,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 28,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.667,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 29,
+      "candidate_count": 1,
+      "status": "failed",
+      "request_duration_seconds": 0.169,
+      "retry_attempts": 4,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.973,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 2,
+          "next_attempt_number": 3,
+          "delay_seconds": 2.414,
+          "error_type": "api_error",
+          "http_status_code": 503
+        },
+        {
+          "attempt_number": 3,
+          "next_attempt_number": 4,
+          "delay_seconds": 4.984,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 4,
+          "next_attempt_number": 5,
+          "delay_seconds": 8.974,
+          "error_type": "api_error",
+          "http_status_code": 429
+        }
+      ],
+      "http_status_code": 429,
+      "raw_error_message": "You exceeded your current quota, please check your plan and billing details. For more information on this error, head to: https://aistudio.google.com/docs/rate-limits. To monitor your current usage, head to: https://ai.dev/rate-limit. * Quota exceeded for metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 15, model: gemini-3.5-flash-lite, description: Generate content requests per minute limit exceeded on Free Tier. See https://aistudio.google.com/docs/rate-limits. Please retry in 39.025155478s.",
+      "failed_stage": "server_response",
+      "error_type": "api_error",
+      "error_message": "Gemini API returned an error (ClientError); no retry was attempted."
+    },
+    {
+      "batch": 30,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.908,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 31,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 12.197,
+      "retry_attempts": 3,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.917,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 2,
+          "next_attempt_number": 3,
+          "delay_seconds": 2.767,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 3,
+          "next_attempt_number": 4,
+          "delay_seconds": 4.967,
+          "error_type": "api_error",
+          "http_status_code": 429
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 32,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.646,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 33,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 4.081,
+      "retry_attempts": 1,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.084,
+          "error_type": "api_error",
+          "http_status_code": 503
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 34,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.938,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 35,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 5.846,
+      "retry_attempts": 1,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.9,
+          "error_type": "api_error",
+          "http_status_code": 503
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 36,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.869,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 37,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.605,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 38,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 2.102,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 39,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.486,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 40,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.437,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 41,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.42,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 42,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.768,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 0,
+      "rejected": 1,
+      "http_status_code": 200
+    },
+    {
+      "batch": 43,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.591,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 0,
+      "rejected": 1,
+      "http_status_code": 200
+    },
+    {
+      "batch": 44,
+      "candidate_count": 1,
+      "status": "failed",
+      "request_duration_seconds": 0.898,
+      "retry_attempts": 4,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.223,
+          "error_type": "api_error",
+          "http_status_code": 503
+        },
+        {
+          "attempt_number": 2,
+          "next_attempt_number": 3,
+          "delay_seconds": 2.475,
+          "error_type": "api_error",
+          "http_status_code": 503
+        },
+        {
+          "attempt_number": 3,
+          "next_attempt_number": 4,
+          "delay_seconds": 4.154,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 4,
+          "next_attempt_number": 5,
+          "delay_seconds": 8.704,
+          "error_type": "api_error",
+          "http_status_code": 429
+        }
+      ],
+      "http_status_code": 503,
+      "raw_error_message": "This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.",
+      "failed_stage": "server_response",
+      "error_type": "api_error",
+      "error_message": "Gemini API returned an error (ServerError); no retry was attempted."
+    },
+    {
+      "batch": 45,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 11.521,
+      "retry_attempts": 3,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.988,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 2,
+          "next_attempt_number": 3,
+          "delay_seconds": 2.792,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 3,
+          "next_attempt_number": 4,
+          "delay_seconds": 4.633,
+          "error_type": "api_error",
+          "http_status_code": 429
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 46,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 3.561,
+      "retry_attempts": 1,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.872,
+          "error_type": "api_error",
+          "http_status_code": 429
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 47,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.703,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 48,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.6,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 49,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.464,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 50,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.907,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 51,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.623,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 52,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.657,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 53,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.734,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 0,
+      "rejected": 1,
+      "http_status_code": 200
+    },
+    {
+      "batch": 54,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.97,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 55,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.54,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 56,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.531,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 57,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.823,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 58,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.724,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 59,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.573,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 60,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 1.609,
+      "retry_attempts": 0,
+      "retry_log": [],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    },
+    {
+      "batch": 61,
+      "candidate_count": 1,
+      "status": "success",
+      "request_duration_seconds": 6.594,
+      "retry_attempts": 2,
+      "retry_log": [
+        {
+          "attempt_number": 1,
+          "next_attempt_number": 2,
+          "delay_seconds": 1.839,
+          "error_type": "api_error",
+          "http_status_code": 429
+        },
+        {
+          "attempt_number": 2,
+          "next_attempt_number": 3,
+          "delay_seconds": 2.6,
+          "error_type": "api_error",
+          "http_status_code": 429
+        }
+      ],
+      "events_returned": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "http_status_code": 200
+    }
+  ],
+  "events_returned": 58,
+  "events_accepted": 52,
+  "events_rejected": 6,
+  "rejected_reasons": [
+    "batch 5/61: event 1: title or title evidence does not appear in source text",
+    "batch 10/61: event 1: title or title evidence does not appear in source text",
+    "batch 11/61: event 1: title or title evidence does not appear in source text",
+    "batch 42/61: event 1: title or title evidence does not appear in source text",
+    "batch 43/61: event 1: title or title evidence does not appear in source text",
+    "batch 53/61: event 1: invalid start_time format '12:00:00'; expected HH:MM"
+  ]
+}

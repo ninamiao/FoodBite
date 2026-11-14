@@ -1,0 +1,13 @@
+{
+  "attempt_timestamp": "2026-11-14T21:19:35+00:00",
+  "model_identifier": "gemini-3.8-flash",
+  "input_filename": "calendar_ucsd_edu_student-life.html",
+  "source_url": "https://calendar.ucsd.edu/student-life",
+  "candidate_count": 61,
+  "last_completed_stage": "PREFLIGHT_PASSED",
+  "final_status": "failed",
+  "error_type": "api_error",
+  "error_message": "Gemini API returned an error (ServerError); no retry was attempted.",
+  "raw_response_file": null,
+  "validated_output_file": null
+}
