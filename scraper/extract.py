@@ -388,9 +388,9 @@ MONTH_PATTERN = "|".join(MONTHS)
 
 def _date_values(text: str, year_hint: int | None) -> tuple[set[str], bool]:
     values: set[str] = set()
-    for match in re.finditer(r"\b(\d{4})-(\d{2})-(\d{2})\b", text):
+    for match in re.finditer(r"(?<!\d)(\d{4}-\d{2}-\d{2})(?!\d)", text):
         try:
-            values.add(date.fromisoformat(match.group(0)).isoformat())
+            values.add(date.fromisoformat(match.group(1)).isoformat())
         except ValueError:
             pass
     month_matches = list(re.finditer(rf"\b({MONTH_PATTERN})\s+(\d{{1,2}})(?:st|nd|rd|th)?(?:,?\s+(\d{{4}}))?\b", text, re.I))
@@ -419,13 +419,14 @@ def _explicit_free_evidence(value: str, is_free: bool) -> bool:
 
 FOOD_TERM = re.compile(
     r"\b(?:food|beverages?|drinks?|refreshments?|snacks?|meals?|breakfast|lunch|dinner|"
-    r"coffee|tea|pastries|pastry|produce|boba|chocolate|pan\s+dulce|pizza|bagels?|"
+    r"coffee|tea|cocoa|pastries|pastry|produce|boba|chocolate|pan\s+dulce|pizza|bagels?|"
     r"sandwiches?|cookies?|donuts?|doughnuts?|groceries|grocery|pantry|shelf[- ]stable items?)\b",
     re.I,
 )
 PROVISION_TERM = re.compile(
     r"\b(?:serv(?:e|es|ed|ing)|provid(?:e|es|ed|ing)|distribut(?:e|s|ed|ing|ion)|"
-    r"receiv(?:e|es|ed|ing)|available|offer(?:s|ed|ing)?|includes?|enjoy(?:s|ed|ing)?)\b|"
+    r"receiv(?:e|es|ed|ing)|available|offer(?:s|ed|ing)?|includes?|enjoy(?:s|ed|ing)?|"
+    r"hand(?:s|ed)?\s+out|grab(?:s|bed|bing)?)\b|"
     r"\b(?:come|join)\s+(?:on\s+over\s+)?for\b",
     re.I,
 )
@@ -510,7 +511,7 @@ def validate_events(
     flagged: list[str] = []
     expected_keys = set(EVENT_FIELDS)
     expected_evidence = set(EVIDENCE_FIELDS)
-    records = source_records or []
+    records = list(source_records) if source_records is not None else []
 
     for index, original in enumerate(payload, 1):
         label = f"event {index}"
@@ -537,14 +538,18 @@ def validate_events(
 
         event["title"] = normalize_text(event["title"])
         evidence = {key: normalize_text(value) if value is not None else None for key, value in evidence.items()}
-        if not records:
+        if records:
+            event_records = records
+        else:
             fallback_title = evidence.get("title") if evidence.get("title") in source_text else event["title"]
-            records = [{"title": fallback_title, "text": source_text, "event_url": event.get("event_url") or ""}]
+            # Build fallback context per event; never let the first event's title
+            # constrain matching for later events in the same response.
+            event_records = [{"title": fallback_title, "text": source_text, "event_url": event.get("event_url") or ""}]
         response_url = normalize_text(event.get("event_url") or "")
-        url_matches = [record for record in records if response_url and record.get("event_url") == response_url]
+        url_matches = [record for record in event_records if response_url and record.get("event_url") == response_url]
         matched = url_matches[0] if url_matches else None
         if matched is None:
-            title_matches = [record for record in records if normalize_text(record.get("title", "")).casefold() == event["title"].casefold()]
+            title_matches = [record for record in event_records if normalize_text(record.get("title", "")).casefold() == event["title"].casefold()]
             if len(title_matches) > 1 and evidence.get("date"):
                 by_date = [record for record in title_matches if evidence["date"] in record.get("text", "")]
                 if len(by_date) == 1:
@@ -586,11 +591,27 @@ def validate_events(
             continue
 
         start_match = re.search(r"^Start:\s*(\d{4}-\d{2}-\d{2})", record_text, re.M)
-        year_hint = int(start_match.group(1)[:4]) if start_match else None
+        end_match = re.search(r"^End:\s*(\d{4}-\d{2}-\d{2})", record_text, re.M)
+        source_start_date = start_match.group(1) if start_match else None
+        source_end_date = end_match.group(1) if end_match else None
+        year_hint = int(source_start_date[:4]) if source_start_date else None
+        _, source_has_range = _date_values(record_text, year_hint)
+        is_display_period = (
+            bool(re.search(r"\b(?:on view|on display|exhibition|display)\b", record_text, re.I))
+            and source_has_range
+        )
         if event["date"] is not None:
             date_quote = evidence.get("date")
             supported_dates, range_quote = _date_values(date_quote or "", year_hint)
-            if date_quote is None or range_quote or event["date"] not in supported_dates:
+            if is_display_period:
+                event["date"] = None
+                evidence["date"] = None
+                flagged.append(f"{label} [ongoing_display]: source describes a multi-day display period, not one event date")
+            elif source_start_date and source_end_date and event["date"] != source_start_date:
+                event["date"] = None
+                evidence["date"] = None
+                flagged.append(f"{label} [date_conflict]: date does not match the source Start date {source_start_date}")
+            elif date_quote is None or range_quote or event["date"] not in supported_dates:
                 event["date"] = None
                 evidence["date"] = None
                 flagged.append(f"{label} [date_conflict]: date is not supported as a single occurrence by its evidence")
@@ -655,12 +676,6 @@ def validate_events(
                     event["address"] = None
                     evidence["address"] = None
                     flagged.append(f"{label} [address_conflict]: source contains conflicting structured and prose addresses")
-
-        if event["date"] is not None and re.search(r"\b(?:on view|on display)\b", record_text, re.I):
-            if re.search(r"\b(?:through|until)\b|[–—]", record_text, re.I):
-                event["date"] = None
-                evidence["date"] = None
-                flagged.append(f"{label} [ongoing_display]: nulled single date for a multi-day display period")
 
         event["source_url"] = source_url
         accepted.append(event)

@@ -219,6 +219,70 @@ class ValidationTests(unittest.TestCase):
         self.assertIsNone(accepted[0]["date"])
         self.assertTrue(any("date_conflict" in item for item in flagged))
 
+    def _date_case(self, title, start, end, date_value, date_evidence, description=""):
+        text = f"Title: {title}\nDescription: {description}\nStart: {start}\nEnd: {end}\nEvent URL: https://example.test/{title.replace(' ', '-').lower()}"
+        record = {"title": title, "text": text, "event_url": f"https://example.test/{title.replace(' ', '-').lower()}"}
+        sample = event_sample(text)
+        sample.update({
+            "title": title, "description": None, "date": date_value,
+            "start_time": None, "end_time": None, "location": None, "address": None,
+            "provides_food": None, "is_free": None, "food_description": None,
+            "eligibility": None, "registration_url": None,
+            "event_url": record["event_url"],
+            "evidence": {key: None for key in EVIDENCE_FIELDS},
+        })
+        sample["evidence"].update({"title": title, "date": date_evidence})
+        return sample, record
+
+    def test_single_day_start_and_end_preserve_valid_event_date(self):
+        sample, record = self._date_case(
+            "Single Day Workshop", "2026-05-01T10:00:00-07:00", "2026-05-01T11:00:00-07:00",
+            "2026-05-01", "Start: 2026-05-01T10:00:00-07:00",
+        )
+        accepted, rejected, _ = validate_events([sample], record["text"], self.source_url, [record])
+        self.assertEqual(rejected, [])
+        self.assertEqual(accepted[0]["date"], "2026-05-01")
+
+    def test_multi_day_display_does_not_accept_end_as_single_event_date(self):
+        sample, record = self._date_case(
+            "Library Exhibit", "2026-05-01", "2026-05-03", "2026-05-03",
+            "End: 2026-05-03", "On view May 1 through May 3, 2026.",
+        )
+        accepted, rejected, flagged = validate_events([sample], record["text"], self.source_url, [record])
+        self.assertEqual(rejected, [])
+        self.assertIsNone(accepted[0]["date"])
+        self.assertTrue(any("ongoing_display" in item for item in flagged))
+
+    def test_multiple_events_match_independently_without_source_records(self):
+        source = "First Campus Event\nSecond Campus Event"
+
+        def fallback_event(title):
+            sample = event_sample(source)
+            sample.update({key: None for key in EVENT_FIELDS if key not in ("title", "source_url", "evidence")})
+            sample["title"] = title
+            sample["source_url"] = self.source_url
+            sample["evidence"] = {key: None for key in EVIDENCE_FIELDS}
+            sample["evidence"]["title"] = title
+            return sample
+
+        accepted, rejected, _ = validate_events(
+            [fallback_event("First Campus Event"), fallback_event("Second Campus Event")],
+            source,
+            self.source_url,
+        )
+        self.assertEqual(rejected, [])
+        self.assertEqual([event["title"] for event in accepted], ["First Campus Event", "Second Campus Event"])
+
+    def test_food_provision_phrases_require_explicit_serving_or_availability(self):
+        from scraper.extract import _find_food_provision_evidence
+
+        for phrase in ("Enjoy a cup of cocoa.", "Pizza will be handed out.", "Grab refreshments."):
+            with self.subTest(phrase=phrase):
+                self.assertEqual(_find_food_provision_evidence(phrase), phrase)
+        for phrase in ("A cup of cocoa is mentioned in the talk.", "The discussion covers pizza."):
+            with self.subTest(phrase=phrase):
+                self.assertIsNone(_find_food_provision_evidence(phrase))
+
     def test_local_source_food_and_date_regressions(self):
         html_path = ROOT / "data" / "calendar_ucsd_edu_student-life.html"
         prepared = preprocess_html(html_path.read_text(encoding="utf-8"), self.source_url)
