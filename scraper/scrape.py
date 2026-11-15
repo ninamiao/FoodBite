@@ -23,6 +23,16 @@ API_URL = "https://api.brightdata.com/request"
 # off a slow unlock before the error is returned. This is one wait, not a retry.
 REQUEST_TIMEOUT_SECONDS = 180
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SUPPORTED_SOURCES = {
+    "ucsd_student_life": {
+        "name": "UCSD Student Life Calendar",
+        "url": "https://calendar.ucsd.edu/student-life",
+    },
+    "muir_college": {
+        "name": "Muir College Calendar of Events",
+        "url": "https://muir.ucsd.edu/studentlife/calendarofevents.html",
+    },
+}
 
 
 class ScrapeError(Exception):
@@ -80,6 +90,17 @@ def build_payload(zone: str, target_url: str) -> dict[str, str]:
     }
 
 
+def identify_source(target_url: str) -> str | None:
+    """Return a configured source key when the URL matches a supported listing."""
+    parsed = urlparse(target_url)
+    normalized = (parsed.scheme.casefold(), (parsed.hostname or "").casefold(), parsed.path.rstrip("/"))
+    for key, source in SUPPORTED_SOURCES.items():
+        known = urlparse(source["url"])
+        if normalized == (known.scheme.casefold(), (known.hostname or "").casefold(), known.path.rstrip("/")):
+            return key
+    return None
+
+
 def build_headers(api_key: str) -> dict[str, str]:
     """Bearer authentication, as documented. The key stays in this header only."""
     return {
@@ -112,6 +133,9 @@ def describe_dry_run(zone: str, target_url: str, confirm_also_set: bool) -> str:
             "Redirects: not followed",
         ]
     )
+    source_key = identify_source(target_url)
+    if source_key:
+        lines.insert(1, f"Source: {SUPPORTED_SOURCES[source_key]['name']}")
     return "\n".join(lines)
 
 

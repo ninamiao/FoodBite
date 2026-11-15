@@ -5,7 +5,9 @@ only when --confirm-api is supplied; --dry-run never contacts the API.
 """
 
 import argparse
+import copy
 import difflib
+import hashlib
 import json
 import os
 import re
@@ -19,6 +21,11 @@ from typing import Any
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
+
+if __package__:
+    from .curated_data import derive_food_status, food_relevance_reason
+else:
+    from curated_data import derive_food_status, food_relevance_reason
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_MODEL = "gemini-3.5-flash-lite"
@@ -221,14 +228,14 @@ def _page_source_url(soup: BeautifulSoup) -> str | None:
 
 
 def preprocess_html(html: str, source_url: str | None = None) -> dict[str, Any]:
-    """Return compact source text for every usable JSON-LD event record.
+    """Return compact source text for JSON-LD events or visible event cards.
 
-    This UCSD calendar uses per-event JSON-LD blocks and `.em-card` listings.
-    JSON-LD retains descriptions and full date/time values for events not
-    currently visible in the card list, so it is the primary source. Candidate
-    selection intentionally has no food keyword filter: Gemini decides whether
-    food is actually served. If JSON-LD is absent, all visible event cards are
-    used, followed by main-page text as a final fallback.
+    The existing UCSD Student Life listing uses per-event JSON-LD and `.em-card`
+    entries. Candidate selection has no food keyword filter: Gemini decides
+    whether food is actually served. If JSON-LD is absent, supported event cards
+    are used, followed by a conservative main-page text fallback. The Muir URL
+    is registered as a source, but its live structure is intentionally unverified
+    until network access is authorized.
     """
     soup = BeautifulSoup(html, "html.parser")
     page_title = normalize_text(soup.title.get_text(" ", strip=True) if soup.title else "")
@@ -685,18 +692,11 @@ def _normalized_title(value: Any) -> str:
     return re.sub(r"[^a-z0-9]+", " ", normalize_text(value).casefold()).strip()
 
 
-def _identity(event: dict[str, Any]) -> tuple[str, str, str, str]:
-    return tuple(
-        normalize_text(event.get(key) or "").casefold()
-        for key in ("title", "date", "location", "source_url")
-    )  # type: ignore[return-value]
-
-
 def _duplicate_pair(left: dict[str, Any], right: dict[str, Any]) -> bool:
-    """Require same occurrence date/source plus strong URL or title/venue match."""
-    if normalize_text(left.get("date") or "") != normalize_text(right.get("date") or ""):
-        return False
-    if normalize_text(left.get("source_url") or "").casefold() != normalize_text(right.get("source_url") or "").casefold():
+    """Match a real occurrence across sources only with date plus strong identity."""
+    left_date = normalize_text(left.get("date") or "")
+    right_date = normalize_text(right.get("date") or "")
+    if not left_date or left_date != right_date:
         return False
     left_url = normalize_text(left.get("event_url") or "").casefold()
     right_url = normalize_text(right.get("event_url") or "").casefold()
@@ -710,16 +710,78 @@ def _duplicate_pair(left: dict[str, Any], right: dict[str, Any]) -> bool:
     right_location = _normalized_title(right.get("location"))
     if not left_location or not right_location or left_location != right_location:
         return False
-    left_start, right_start = left.get("start_time"), right.get("start_time")
-    return not (left_start and right_start and left_start != right_start)
+    return all(
+        not (left.get(key) and right.get(key) and left.get(key) != right.get(key))
+        for key in ("start_time", "end_time")
+    )
+
+
+def _possible_duplicate_pair(left: dict[str, Any], right: dict[str, Any]) -> bool:
+    """Find same-title/date records with unresolved identity conflicts for review."""
+    if normalize_text(left.get("date") or "") != normalize_text(right.get("date") or ""):
+        return False
+    left_title, right_title = _normalized_title(left.get("title")), _normalized_title(right.get("title"))
+    if not left_title or not right_title or difflib.SequenceMatcher(None, left_title, right_title).ratio() < 0.9:
+        return False
+    return not _duplicate_pair(left, right)
+
+
+SOURCE_SNAPSHOT_FIELDS = (
+    "source_url", "event_url", "title", "date", "start_time", "end_time", "location", "address",
+    "description", "provides_food", "is_free", "food_description", "eligibility", "registration_url",
+    "evidence", "extraction_evidence", "food_status", "conditions",
+)
+
+
+def _source_snapshot(event: dict[str, Any]) -> dict[str, Any]:
+    return {key: copy.deepcopy(event.get(key)) for key in SOURCE_SNAPSHOT_FIELDS if key in event}
+
+
+def _event_source_records(event: dict[str, Any]) -> list[dict[str, Any]]:
+    existing = event.get("source_records")
+    if isinstance(existing, list) and existing:
+        return [copy.deepcopy(item) for item in existing if isinstance(item, dict)]
+    return [_source_snapshot(event)]
+
+
+def _stable_event_id(event: dict[str, Any]) -> str:
+    identity = event.get("event_url") or "|".join(
+        str(event.get(key) or "") for key in ("source_url", "title", "date", "location")
+    )
+    return "event-" + hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
+
+
+def _canonicalize_extracted_event(event: dict[str, Any]) -> dict[str, Any]:
+    """Add canonical dataset conventions to one validated extraction record."""
+    canonical = copy.deepcopy(event)
+    canonical.setdefault("id", _stable_event_id(canonical))
+    canonical.setdefault("original_title", canonical.get("title"))
+    canonical.setdefault("extraction_evidence", copy.deepcopy(canonical.get("evidence") or {}))
+    canonical.setdefault("review_warnings", [])
+    canonical.setdefault("conditions", [])
+    evidence = canonical.get("evidence") or {}
+    canonical.setdefault(
+        "food_status",
+        derive_food_status(
+            canonical.get("provides_food"),
+            canonical.get("is_free"),
+            evidence.get("provides_food"),
+            evidence.get("is_free"),
+        ),
+    )
+    canonical["source_records"] = _event_source_records(canonical)
+    canonical["source_urls"] = list(dict.fromkeys(
+        record.get("source_url") for record in canonical["source_records"] if record.get("source_url")
+    ))
+    return canonical
 
 
 def _merge_compatible(left: dict[str, Any], right: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
-    merged = dict(left)
-    merged_evidence = dict(left.get("evidence") or {})
+    merged = copy.deepcopy(left)
+    merged_evidence = copy.deepcopy(left.get("evidence") or {})
     conflicts: list[str] = []
     for key in EVENT_FIELDS:
-        if key == "evidence":
+        if key in {"evidence", "source_url", "event_url"}:
             continue
         a, b = merged.get(key), right.get(key)
         if a is not None and b is not None and a != b:
@@ -735,11 +797,33 @@ def _merge_compatible(left: dict[str, Any], right: dict[str, Any]) -> tuple[dict
         elif current is None and value is not None:
             merged_evidence[key] = value
     merged["evidence"] = merged_evidence
+    source_records = _event_source_records(left)
+    source_records.extend(_event_source_records(right))
+    unique_records: list[dict[str, Any]] = []
+    for source_record in source_records:
+        if source_record not in unique_records:
+            unique_records.append(source_record)
+    merged["source_records"] = unique_records
+    merged["source_urls"] = list(dict.fromkeys(
+        record.get("source_url") for record in unique_records if record.get("source_url")
+    ))
+    conditions = list(copy.deepcopy(left.get("conditions") or []))
+    for condition in copy.deepcopy(right.get("conditions") or []):
+        if condition not in conditions:
+            conditions.append(condition)
+    if conditions or "conditions" in left or "conditions" in right:
+        merged["conditions"] = conditions
+    warnings = list(merged.get("review_warnings") or [])
+    if conflicts:
+        warning = "Conflicting source values need manual review: " + ", ".join(sorted(set(conflicts)))
+        if warning not in warnings:
+            warnings.append(warning)
+    merged["review_warnings"] = warnings
     return merged, sorted(set(conflicts))
 
 
 def merge_events_detailed(existing: Any, new_events: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], int, int, list[str]]:
-    """Deduplicate compatible same-occurrence records and flag conflicts without discarding either."""
+    """Merge confirmed duplicates across sources and preserve uncertain pairs for review."""
     if not isinstance(existing, list):
         raise ExtractError("data/events.json must contain a JSON array to preserve its existing structure.")
     if any(not isinstance(item, dict) for item in existing):
@@ -747,26 +831,34 @@ def merge_events_detailed(existing: Any, new_events: list[dict[str, Any]]) -> tu
     merged = list(existing)
     added = updated = 0
     flags: list[str] = []
-    for candidate in new_events:
+    for unnormalized_candidate in new_events:
+        candidate = _canonicalize_extracted_event(unnormalized_candidate)
         matches = [index for index, item in enumerate(merged) if _duplicate_pair(item, candidate)]
         if not matches:
-            # Drop exact byte/value duplicates even if optional fields have no identity data.
-            if candidate in merged:
-                flags.append(f"[exact_duplicate]: skipped exact duplicate {candidate.get('title')!r} on {candidate.get('date')!r}")
-                continue
+            possible_matches = [index for index, item in enumerate(merged) if _possible_duplicate_pair(item, candidate)]
+            if possible_matches:
+                reason = f"[possible_duplicate_review]: did not merge {candidate.get('title')!r} on {candidate.get('date')!r}; title/date match but venue, time, or source identity is uncertain"
+                candidate_warnings = list(candidate.get("review_warnings") or [])
+                candidate_warnings.append(reason)
+                candidate["review_warnings"] = candidate_warnings
+                for index in possible_matches:
+                    existing_event = copy.deepcopy(merged[index])
+                    existing_warnings = list(existing_event.get("review_warnings") or [])
+                    if reason not in existing_warnings:
+                        existing_warnings.append(reason)
+                    existing_event["review_warnings"] = existing_warnings
+                    merged[index] = existing_event
+                flags.append(reason)
             merged.append(candidate)
             added += 1
             continue
         index = matches[0]
         combined, conflicts = _merge_compatible(merged[index], candidate)
         if conflicts:
-            flags.append(f"[duplicate_conflict]: retained both {candidate.get('title')!r} records on {candidate.get('date')!r}; conflicting fields: {', '.join(conflicts)}")
-            merged.append(candidate)
-        else:
-            changed = combined != merged[index]
-            merged[index] = combined
-            updated += int(changed)
-            # Similar duplicate records may be omitted after complementary fields are preserved.
+            flags.append(f"[duplicate_conflict]: merged confirmed duplicate {candidate.get('title')!r} on {candidate.get('date')!r}; kept established fields and preserved conflicting values in source_records: {', '.join(conflicts)}")
+        changed = combined != merged[index]
+        merged[index] = combined
+        updated += int(changed)
     return merged, added, updated, flags
 
 
@@ -816,6 +908,27 @@ def save_json_new(path: Path, value: Any) -> None:
 def _unique_run_stem() -> str:
     now = datetime.now(timezone.utc)
     return f"{now.strftime('%Y%m%dT%H%M%S_%fZ')}_{uuid.uuid4().hex[:8]}"
+
+
+def load_existing_events(path: Path) -> tuple[list[dict[str, Any]], str]:
+    """Read legacy event arrays or the canonical object without modifying it."""
+    if not path.exists():
+        return [], "empty"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        raise
+    if isinstance(payload, list):
+        events = payload
+        source_format = "array"
+    elif isinstance(payload, dict) and isinstance(payload.get("events"), list):
+        events = payload["events"]
+        source_format = "canonical_object"
+    else:
+        raise ExtractError("Merge base must be an event array or a canonical object containing an events array.")
+    if any(not isinstance(item, dict) for item in events):
+        raise ExtractError("Merge base contains a non-object event; refusing to discard it.")
+    return events, source_format
 
 
 def _stage(stage: str) -> None:
@@ -920,7 +1033,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("html_file", type=Path, help="Path to the saved HTML file")
     parser.add_argument("--source-url", help="Original listing URL (used if the HTML has no canonical URL)")
     parser.add_argument("--output", type=Path, default=PROJECT_ROOT / "data" / "events.json",
-                        help="Existing event array to preserve and merge into the per-run validated artifact")
+                        help="Read-only merge base: an event array or canonical object with an events array; run artifacts are saved separately")
     parser.add_argument("--run-dir", type=Path, default=PROJECT_ROOT / "data" / "extraction_runs", help="Directory for unique raw, validated, and metadata artifacts")
     parser.add_argument("--dry-run", action="store_true", help="Preview preprocessed input; never calls Gemini")
     parser.add_argument("--confirm-api", action="store_true", help="Send exactly one confirmed Gemini request")
@@ -981,6 +1094,8 @@ def main(argv: list[str] | None = None) -> int:
         "input_filename": args.html_file.name,
         "source_url": prepared["source_url"],
         "candidate_count": prepared["candidate_count"],
+        "merge_base_format": None,
+        "food_relevance_excluded_count": 0,
         "batch_size": args.batch_size,
         "batch_count": len(batches),
         "last_completed_stage": "PREFLIGHT_STARTED",
@@ -1006,9 +1121,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if validated_path.exists():
             raise FileExistsError(f"Per-run validated artifact already exists: {validated_path}")
-        existing = json.loads(args.output.read_text(encoding="utf-8")) if args.output.exists() else []
-        if not isinstance(existing, list) or any(not isinstance(item, dict) for item in existing):
-            raise ExtractError("Output JSON must be an array of event objects; refusing to overwrite it.")
+        existing, merge_base_format = load_existing_events(args.output)
+        attempt["merge_base_format"] = merge_base_format
         api_key = load_api_key()
         model = get_model_name()
         attempt["model_identifier"] = model
@@ -1059,7 +1173,16 @@ def main(argv: list[str] | None = None) -> int:
                 returned_count += len(parsed) if isinstance(parsed, list) else 0
                 failure_stage = "VALIDATION_COMPLETED"
                 accepted, rejected, flagged = validate_events(parsed, batch_source, prepared["source_url"], batch)
-                accepted_all.extend(accepted)
+                relevant_accepted: list[dict[str, Any]] = []
+                food_irrelevant_count = 0
+                for event in accepted:
+                    if food_relevance_reason(event) is None:
+                        food_irrelevant_count += 1
+                        rejected.append("event [food_relevance]: no food-related source evidence")
+                    else:
+                        relevant_accepted.append(event)
+                accepted_all.extend(relevant_accepted)
+                attempt["food_relevance_excluded_count"] = attempt.get("food_relevance_excluded_count", 0) + food_irrelevant_count
                 rejected_all.extend([f"{batch_label}: {reason}" for reason in rejected])
                 flagged_all.extend([f"{batch_label}: {reason}" for reason in flagged])
                 _stage(f"VALIDATION_COMPLETED {batch_label}")
@@ -1074,7 +1197,7 @@ def main(argv: list[str] | None = None) -> int:
                 attempt["validated_output_file"] = str(validated_path)
                 attempt["last_completed_stage"] = "VALIDATED_OUTPUT_SAVED"
                 _stage(f"VALIDATED_OUTPUT_SAVED {batch_label}")
-                attempt["batch_results"].append({"batch": batch_index, "candidate_count": len(batch), "status": "success", "request_duration_seconds": duration, "retry_attempts": batch_retry_count, "retry_log": retry_log, "events_returned": len(parsed) if isinstance(parsed, list) else 0, "accepted": len(accepted), "rejected": len(rejected)})
+                attempt["batch_results"].append({"batch": batch_index, "candidate_count": len(batch), "status": "success", "request_duration_seconds": duration, "retry_attempts": batch_retry_count, "retry_log": retry_log, "events_returned": len(parsed) if isinstance(parsed, list) else 0, "accepted": len(relevant_accepted), "rejected": len(rejected)})
             except StageError as exc:
                 duration = exc.duration if exc.duration is not None else round(time.perf_counter() - batch_start, 3)
                 retry_log = getattr(exc, "retry_log", [])

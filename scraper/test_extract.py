@@ -19,6 +19,7 @@ from scraper.extract import (
     call_gemini,
     chunk_candidates,
     get_model_name,
+    load_existing_events,
     main,
     merge_events,
     preprocess_html,
@@ -405,6 +406,38 @@ class PreprocessingTests(unittest.TestCase):
         self.assertNotIn("provides_food", welcome)
         self.assertNotIn("provides_food", welcome["text"])
 
+    def test_muir_jsonld_candidate_keeps_listing_and_event_source_urls(self):
+        source_url = "https://muir.ucsd.edu/studentlife/calendarofevents.html"
+        html = """<html><head><title>Muir Calendar</title></head><body>
+        <script type="application/ld+json">{
+          "@type":"Event","name":"Muir Community Dinner",
+          "description":"Dinner will be served to attendees.",
+          "startDate":"2026-11-20T18:00:00-08:00",
+          "url":"https://muir.ucsd.edu/event/community-dinner"
+        }</script></body></html>"""
+        prepared = preprocess_html(html, source_url)
+        self.assertEqual(prepared["source_url"], source_url)
+        self.assertEqual(prepared["candidate_count"], 1)
+        self.assertEqual(prepared["candidates"][0]["title"], "Muir Community Dinner")
+        self.assertIn("https://muir.ucsd.edu/event/community-dinner", prepared["candidates"][0]["text"])
+
+    def test_merge_base_loader_accepts_array_and_canonical_object(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "events.json"
+            path.write_text("[]", encoding="utf-8")
+            self.assertEqual(load_existing_events(path), ([], "array"))
+            existing = event_sample("source")
+            canonical = {"schema_version": "1.2", "reviewed_at": "2026-11-14", "events": [existing]}
+            path.write_text(json.dumps(canonical), encoding="utf-8")
+            loaded, source_format = load_existing_events(path)
+            self.assertEqual(source_format, "canonical_object")
+            self.assertEqual(loaded, [existing])
+            path.write_text('{"schema_version":"1.2","events":[]}', encoding="utf-8")
+            self.assertEqual(load_existing_events(path), ([], "canonical_object"))
+            path.write_text('{"schema_version":"1.2"}', encoding="utf-8")
+            with self.assertRaisesRegex(ExtractError, "events array"):
+                load_existing_events(path)
+
     def test_merge_preserves_more_complete_existing_duplicate(self):
         current = event_sample("source")
         less_complete = dict(current)
@@ -412,8 +445,9 @@ class PreprocessingTests(unittest.TestCase):
         merged, added, updated = merge_events([current], [less_complete])
         self.assertEqual(len(merged), 1)
         self.assertEqual(added, 0)
-        self.assertEqual(updated, 0)
+        self.assertEqual(updated, 1)
         self.assertEqual(merged[0]["description"], current["description"])
+        self.assertTrue(any(record.get("description") is None for record in merged[0]["source_records"]))
 
     def test_same_date_duplicates_are_removed_but_recurring_dates_remain(self):
         first = event_sample("source")
@@ -424,18 +458,86 @@ class PreprocessingTests(unittest.TestCase):
         merged, added, updated = merge_events([first], [minor_variant, second_occurrence])
         self.assertEqual(len(merged), 2)
         self.assertEqual(added, 1)
-        self.assertEqual(updated, 0)
+        self.assertEqual(updated, 1)
 
-    def test_conflicting_duplicate_records_are_retained_and_flagged(self):
+    def test_conflicting_confirmed_duplicate_is_one_record_with_both_source_evidence(self):
         from scraper.extract import merge_events_detailed
         first = event_sample("source")
+        first["id"] = "event-established-id"
         conflict = dict(first)
         conflict["is_free"] = False
         merged, added, updated, flags = merge_events_detailed([first], [conflict])
-        self.assertEqual(len(merged), 2)
+        self.assertEqual(len(merged), 1)
         self.assertEqual(added, 0)
-        self.assertEqual(updated, 0)
+        self.assertEqual(updated, 1)
         self.assertTrue(any("duplicate_conflict" in item and "is_free" in item for item in flags))
+        self.assertEqual(merged[0]["id"], "event-established-id")
+        self.assertEqual(merged[0]["is_free"], True)
+        self.assertEqual({record["is_free"] for record in merged[0]["source_records"]}, {True, False})
+        self.assertTrue(any("is_free" in warning for warning in merged[0]["review_warnings"]))
+
+    def test_cross_source_duplicate_merges_and_preserves_both_source_urls(self):
+        from scraper.extract import merge_events_detailed
+        first = event_sample("source one")
+        first.update({"id": "event-stable", "source_url": "https://calendar.ucsd.edu/student-life",
+                      "event_url": "https://calendar.ucsd.edu/event/community-dinner"})
+        second = dict(first)
+        second.update({"source_url": "https://muir.ucsd.edu/studentlife/calendarofevents.html",
+                       "event_url": "https://muir.ucsd.edu/event/community-dinner"})
+        second["evidence"] = dict(first["evidence"], provides_food="Dinner will be served to attendees")
+        second["description"] = "Muir's listing gives a longer dinner description."
+        merged, added, updated, flags = merge_events_detailed([first], [second])
+        self.assertEqual((len(merged), added), (1, 0))
+        self.assertEqual(updated, 1)
+        self.assertEqual(merged[0]["id"], "event-stable")
+        self.assertEqual(merged[0]["source_url"], first["source_url"])
+        self.assertEqual(set(merged[0]["source_urls"]), {first["source_url"], second["source_url"]})
+        self.assertEqual({record["event_url"] for record in merged[0]["source_records"]},
+                         {first["event_url"], second["event_url"]})
+        self.assertTrue(any(record["evidence"]["provides_food"] == "Dinner will be served to attendees"
+                            for record in merged[0]["source_records"]))
+        self.assertTrue(any("description" in flag for flag in flags))
+
+    def test_possible_duplicate_is_flagged_but_not_merged(self):
+        from scraper.extract import merge_events_detailed
+        first = event_sample("source one")
+        first["event_url"] = "https://calendar.ucsd.edu/event/community-dinner"
+        second = dict(first)
+        second.update({"source_url": "https://muir.ucsd.edu/studentlife/calendarofevents.html",
+                       "event_url": "https://muir.ucsd.edu/event/community-dinner",
+                       "location": "Different venue"})
+        merged, added, _, flags = merge_events_detailed([first], [second])
+        self.assertEqual((len(merged), added), (2, 1))
+        self.assertTrue(any("possible_duplicate_review" in flag for flag in flags))
+        self.assertTrue(all(any("possible_duplicate_review" in warning for warning in event["review_warnings"])
+                            for event in merged))
+
+    def test_same_title_date_and_venue_with_conflicting_time_is_not_auto_merged(self):
+        from scraper.extract import merge_events_detailed
+        first = event_sample("source one")
+        second = dict(first, event_url="https://muir.ucsd.edu/event/community-dinner", end_time="15:00")
+        merged, added, _, flags = merge_events_detailed([first], [second])
+        self.assertEqual((len(merged), added), (2, 1))
+        self.assertTrue(any("possible_duplicate_review" in flag for flag in flags))
+
+    def test_same_title_recurring_event_on_different_date_is_not_flagged_or_merged(self):
+        from scraper.extract import merge_events_detailed
+        first = event_sample("source one")
+        second = dict(first, date="2026-12-11", event_url="https://muir.ucsd.edu/event/community-dinner")
+        merged, added, updated, flags = merge_events_detailed([first], [second])
+        self.assertEqual((len(merged), added, updated), (2, 1, 0))
+        self.assertEqual(flags, [])
+        self.assertEqual({event["date"] for event in merged}, {"2026-11-20", "2026-12-11"})
+
+    def test_new_extraction_records_receive_deterministic_ids_and_food_status(self):
+        first = event_sample("source")
+        first.pop("id", None)
+        merged_a, _, _ = merge_events([], [first])
+        merged_b, _, _ = merge_events([], [first])
+        self.assertEqual(merged_a[0]["id"], merged_b[0]["id"])
+        self.assertEqual(merged_a[0]["food_status"], "confirmed_free")
+        self.assertEqual(merged_a[0]["original_title"], first["title"])
+        self.assertEqual(merged_a[0]["extraction_evidence"], first["evidence"])
 
     def test_same_title_alone_does_not_collapse_distinct_events(self):
         first = event_sample("source")
@@ -537,6 +639,38 @@ class AttemptArtifactTests(unittest.TestCase):
         metadata = json.loads((self.run_dir / "attempt_metadata.json").read_text())
         self.assertEqual(metadata["last_completed_stage"], "VALIDATED_OUTPUT_SAVED")
         self.assertEqual(metadata["final_status"], "success")
+
+    def test_canonical_object_is_read_only_merge_base_and_run_artifact_remains_an_array(self):
+        existing = event_sample("existing curated event")
+        existing["id"] = "existing-stable-id"
+        canonical = {"schema_version": "1.2", "reviewed_at": "2026-11-14", "events": [existing]}
+        original_text = json.dumps(canonical, ensure_ascii=False, indent=2) + "\n"
+        self.events_path.write_text(original_text, encoding="utf-8")
+        status, _, _ = self.run_confirmed("[]", stem="canonical-base")
+        self.assertEqual(status, 0)
+        self.assertEqual(self.events_path.read_text(encoding="utf-8"), original_text)
+        artifact = json.loads((self.run_dir / "canonical-base_validated.json").read_text(encoding="utf-8"))
+        metadata = json.loads((self.run_dir / "canonical-base_metadata.json").read_text(encoding="utf-8"))
+        self.assertIsInstance(artifact, list)
+        self.assertEqual(artifact[0]["id"], "existing-stable-id")
+        self.assertEqual(metadata["merge_base_format"], "canonical_object")
+
+    def test_events_without_food_evidence_are_filtered_before_validated_output(self):
+        unrelated = event_sample("source")
+        unrelated.update({
+            "title": "Campus Meeting", "description": "Discuss campus planning.",
+            "food_description": None, "provides_food": None, "is_free": None,
+            "evidence": {key: None for key in EVIDENCE_FIELDS},
+        })
+        unrelated["evidence"]["title"] = "Campus Meeting"
+        status, _, _ = self.run_confirmed(validator=lambda *args: ([unrelated], [], []), stem="food-relevance")
+        self.assertEqual(status, 0)
+        artifact = json.loads((self.run_dir / "food-relevance_validated.json").read_text(encoding="utf-8"))
+        metadata = json.loads((self.run_dir / "food-relevance_metadata.json").read_text(encoding="utf-8"))
+        self.assertEqual(artifact, [])
+        self.assertEqual(metadata["food_relevance_excluded_count"], 1)
+        self.assertEqual(metadata["events_accepted"], 0)
+        self.assertTrue(any("food_relevance" in reason for reason in metadata["rejected_reasons"]))
 
     def test_invalid_json_keeps_raw_and_records_last_completed_stage(self):
         status, _, stderr = self.run_confirmed("not JSON")

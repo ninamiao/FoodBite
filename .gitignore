@@ -20,7 +20,8 @@ __pycache__/
 !.env.example
 
 # Local data and extraction outputs
-data/
+data/*
+!data/event_curation_exclusions.json
 
 # Logs
 *.log
