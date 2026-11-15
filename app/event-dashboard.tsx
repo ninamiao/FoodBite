@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import {
   displayDate,
@@ -35,6 +36,15 @@ import {
   togglePlannedId,
   type CuratedEvent,
 } from "../lib/events";
+
+const EventMap = dynamic(() => import("./event-map"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-xl bg-white p-8 text-center text-sm text-[#89938A]">
+      Loading map...
+    </div>
+  ),
+});
 
 const PLANNER_STORAGE_KEY = "freebite-planned-event-ids";
 
@@ -236,7 +246,7 @@ export default function EventDashboard({
   events: CuratedEvent[];
   reviewedAt: string;
 }) {
-  const [viewMode, setViewMode] = useState<"events" | "calendar">("events");
+  const [viewMode, setViewMode] = useState<"events" | "calendar" | "map">("events");
   const [calendarView, setCalendarView] = useState<"month" | "week">("month");
   const [calendarScope, setCalendarScope] = useState<CalendarEventScope>("all");
   const [calendarMonth, setCalendarMonth] = useState({ year: 2000, month: 1 });
@@ -300,6 +310,13 @@ export default function EventDashboard({
   const dateGroups = useMemo(() => groupEventsByDate(availableEvents), [availableEvents]);
   const allDateGroups = useMemo(() => groupEventsByDate(sortEvents(events, sortMode)), [events, sortMode]);
   const visibleGroups = filterDateGroups(dateGroups, selectedDate);
+  const mapEvents =
+  browseMode === "date"
+    ? [
+        ...visibleGroups.dated.flatMap(({ events }) => events),
+        ...visibleGroups.undated,
+      ]
+    : availableEvents;
   const plannedEvents = useMemo(
     () => events.filter((event) => plannedSet.has(event.id)),
     [events, plannedSet],
@@ -383,167 +400,420 @@ export default function EventDashboard({
             <div className="mb-5 inline-flex rounded-xl border border-[#E5E9E2] bg-white p-1">
               <button type="button" aria-pressed={viewMode === "events"} onClick={() => setViewMode("events")} className={`rounded-lg px-3 py-2 text-sm ${viewMode === "events" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>Events</button>
               <button type="button" aria-pressed={viewMode === "calendar"} onClick={() => setViewMode("calendar")} className={`rounded-lg px-3 py-2 text-sm ${viewMode === "calendar" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>Calendar</button>
+              <button
+                type="button"
+                aria-pressed={viewMode === "map"}
+                onClick={() => setViewMode("map")}
+                className={`rounded-lg px-3 py-2 text-sm ${
+                  viewMode === "map"
+                    ? "bg-[#254A38] text-white"
+                    : "text-[#68776C] hover:bg-[#F6F8F4]"
+                }`}
+              >
+                Map
+              </button>
             </div>
 
-            {viewMode === "events" ? <>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-semibold">Food opportunities</h2>
-                <p className="mt-1 text-sm text-[#89938A]">Unconfirmed listings stay visible and clearly labeled.</p>
-              </div>
-              <span className="text-xs text-[#89938A]">{availableEvents.length} of {events.length} events</span>
-            </div>
 
-            <div className="mb-5 flex flex-wrap items-end gap-3">
-              <fieldset>
-                <legend className="mb-1.5 text-xs font-medium text-[#68776C]">Browse</legend>
-                <div className="inline-flex rounded-xl border border-[#E5E9E2] bg-white p-1">
-                  <button type="button" aria-pressed={browseMode === "all"} onClick={() => setBrowseMode("all")} className={`rounded-lg px-3 py-2 text-sm ${browseMode === "all" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>All events</button>
-                  <button type="button" aria-pressed={browseMode === "date"} onClick={() => setBrowseMode("date")} className={`rounded-lg px-3 py-2 text-sm ${browseMode === "date" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>By date</button>
+            {viewMode === "events" ? (
+              <>
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-xl font-semibold">Food opportunities</h2>
+                    <p className="mt-1 text-sm text-[#89938A]">Unconfirmed listings stay visible and clearly labeled.</p>
+                  </div>
+                  <span className="text-xs text-[#89938A]">{availableEvents.length} of {events.length} events</span>
                 </div>
-              </fieldset>
 
-              {browseMode === "date" && (
-                <label className="min-w-48 flex-1 sm:flex-none">
-                  <span className="mb-1.5 block text-xs font-medium text-[#68776C]">Select a date</span>
-                  <select value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} className="w-full rounded-xl border border-[#E5E9E2] bg-white px-3 py-2.5 text-sm text-[#243B30]">
-                    <option value="all">All dates</option>
-                    {allDateGroups.dated.map(({ date }) => <option key={date} value={date}>{displayDate(date)}</option>)}
-                    {allDateGroups.undated.length > 0 && <option value="__undated__">Date to be confirmed</option>}
-                  </select>
+                <div className="mb-5 flex flex-wrap items-end gap-3">
+                  <fieldset>
+                    <legend className="mb-1.5 text-xs font-medium text-[#68776C]">Browse</legend>
+                    <div className="inline-flex rounded-xl border border-[#E5E9E2] bg-white p-1">
+                      <button type="button" aria-pressed={browseMode === "all"} onClick={() => setBrowseMode("all")} className={`rounded-lg px-3 py-2 text-sm ${browseMode === "all" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>All events</button>
+                      <button type="button" aria-pressed={browseMode === "date"} onClick={() => setBrowseMode("date")} className={`rounded-lg px-3 py-2 text-sm ${browseMode === "date" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>By date</button>
+                    </div>
+                  </fieldset>
+
+                  {browseMode === "date" && (
+                    <label className="min-w-48 flex-1 sm:flex-none">
+                      <span className="mb-1.5 block text-xs font-medium text-[#68776C]">Select a date</span>
+                      <select value={selectedDate} onChange={(event) => setSelectedDate(event.target.value)} className="w-full rounded-xl border border-[#E5E9E2] bg-white px-3 py-2.5 text-sm text-[#243B30]">
+                        <option value="all">All dates</option>
+                        {allDateGroups.dated.map(({ date }) => <option key={date} value={date}>{displayDate(date)}</option>)}
+                        {allDateGroups.undated.length > 0 && <option value="__undated__">Date to be confirmed</option>}
+                      </select>
+                    </label>
+                  )}
+
+                  <label className="min-w-52 flex-1 sm:flex-none">
+                    <span className="mb-1.5 block text-xs font-medium text-[#68776C]">Sort</span>
+                    <select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)} className="w-full rounded-xl border border-[#E5E9E2] bg-white px-3 py-2.5 text-sm text-[#243B30]">
+                      <option value="date">Date: earliest first</option>
+                      <option value="food">Confirmed food first</option>
+                    </select>
+                  </label>
+
+                  <label className="min-w-52 flex-1 sm:flex-none">
+                    <span className="mb-1.5 block text-xs font-medium text-[#68776C]">Food cost</span>
+                    <select value={foodCostFilter} onChange={(event) => setFoodCostFilter(event.target.value as FoodCostFilter)} className="w-full rounded-xl border border-[#E5E9E2] bg-white px-3 py-2.5 text-sm text-[#243B30]">
+                      {foodCostFilterOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                  </label>
+                </div>
+
+                <label className="mb-5 block">
+                  <span className="sr-only">Search events</span>
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search events, food, dates, or locations..."
+                    className="w-full rounded-xl border border-[#E5E9E2] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#567B60]"
+                  />
                 </label>
-              )}
 
-              <label className="min-w-52 flex-1 sm:flex-none">
-                <span className="mb-1.5 block text-xs font-medium text-[#68776C]">Sort</span>
-                <select value={sortMode} onChange={(event) => setSortMode(event.target.value as SortMode)} className="w-full rounded-xl border border-[#E5E9E2] bg-white px-3 py-2.5 text-sm text-[#243B30]">
-                  <option value="date">Date: earliest first</option>
-                  <option value="food">Confirmed food first</option>
-                </select>
-              </label>
+                {availableEvents.length === 0 ? (
+                  <p className="rounded-2xl border border-dashed border-[#DCE3D9] bg-white p-8 text-center text-sm text-[#68776C]">
+                    No events match “{search}”. Try a title, food, date, or location term.
+                  </p>
+                ) : browseMode === "all" ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {availableEvents.map((event) => <EventCard key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} />)}
+                  </div>
+                ) : (
+                  <div className="space-y-8">
+                    {visibleGroups.dated.map(({ date, events: groupedEvents }) => (
+                      <section key={date} aria-label={`Events on ${displayDate(date)}`}>
+                        <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#365B42]">{displayDate(date)}</h3>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          {groupedEvents.map((event) => <EventCard key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} />)}
+                        </div>
+                      </section>
+                    ))}
+                    {visibleGroups.undated.length > 0 && (
+                      <section aria-label="Events with date to be confirmed">
+                        <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#68776C]">Date to be confirmed</h3>
+                        <div className="grid gap-4 sm:grid-cols-2">
+                          {visibleGroups.undated.map((event) => <EventCard key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} />)}
+                        </div>
+                      </section>
+                    )}
+                    {selectedDate !== "all" && selectedDate !== "__undated__" && visibleGroups.dated.length === 0 && (
+                      <p className="rounded-2xl border border-dashed border-[#DCE3D9] bg-white p-8 text-center text-sm text-[#68776C]">No events are available for this date.</p>
+                    )}
+                    {selectedDate === "__undated__" && visibleGroups.undated.length === 0 && (
+                      <p className="rounded-2xl border border-dashed border-[#DCE3D9] bg-white p-8 text-center text-sm text-[#68776C]">No events have an unknown date.</p>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : viewMode === "calendar" ? (
+              <div>
+                <div>
+                  <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+                    <fieldset>
+                      <legend className="mb-1.5 text-xs font-medium text-[#68776C]">Calendar events</legend>
+                      <div className="inline-flex rounded-xl border border-[#E5E9E2] bg-white p-1">
+                        <button type="button" aria-pressed={calendarScope === "all"} onClick={() => setCalendarScope("all")} className={`rounded-lg px-3 py-2 text-sm ${calendarScope === "all" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>All Events</button>
+                        <button type="button" aria-pressed={calendarScope === "planned"} onClick={() => setCalendarScope("planned")} className={`rounded-lg px-3 py-2 text-sm ${calendarScope === "planned" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>My Plan</button>
+                      </div>
+                    </fieldset>
 
-              <label className="min-w-52 flex-1 sm:flex-none">
-                <span className="mb-1.5 block text-xs font-medium text-[#68776C]">Food cost</span>
-                <select value={foodCostFilter} onChange={(event) => setFoodCostFilter(event.target.value as FoodCostFilter)} className="w-full rounded-xl border border-[#E5E9E2] bg-white px-3 py-2.5 text-sm text-[#243B30]">
-                  {foodCostFilterOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-                </select>
-              </label>
-            </div>
+                    <fieldset>
+                      <legend className="mb-1.5 text-xs font-medium text-[#68776C]">Calendar view</legend>
+                      <div className="inline-flex rounded-xl border border-[#E5E9E2] bg-white p-1">
+                        <button type="button" aria-pressed={calendarView === "month"} onClick={() => setCalendarView("month")} className={`rounded-lg px-3 py-2 text-sm ${calendarView === "month" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>Month</button>
+                        <button type="button" aria-pressed={calendarView === "week"} onClick={() => setCalendarView("week")} className={`rounded-lg px-3 py-2 text-sm ${calendarView === "week" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>Week</button>
+                      </div>
+                    </fieldset>
+                  </div>
 
-            <label className="mb-5 block">
-              <span className="sr-only">Search events</span>
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search events, food, dates, or locations..."
-                className="w-full rounded-xl border border-[#E5E9E2] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#567B60]"
-              />
-            </label>
+                  {calendarScope === "planned" && plannedEvents.length === 0 && (
+                    <p className="mb-4 rounded-xl border border-dashed border-[#DCE3D9] bg-white p-4 text-sm text-[#68776C]">
+                      Your plan is empty. Add an event from the Events view or All Events calendar.
+                    </p>
+                  )}
 
-            {availableEvents.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-[#DCE3D9] bg-white p-8 text-center text-sm text-[#68776C]">
-                No events match “{search}”. Try a title, food, date, or location term.
-              </p>
-            ) : browseMode === "all" ? (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {availableEvents.map((event) => <EventCard key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} />)}
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => calendarView === "month" ? navigateCalendarMonth(-1) : navigateCalendarWeek(-1)}
+                      aria-label={calendarView === "month" ? "Previous month" : "Previous week"}
+                      className="rounded-lg border border-[#E5E9E2] bg-white px-3 py-2 text-sm text-[#365B42] hover:bg-[#F6F8F4]"
+                    >
+                      ← Previous {calendarView}
+                    </button>
+                    <h2 className="text-center text-xl font-semibold" aria-live="polite">
+                      {calendarView === "month" ? monthLabel : weekLabel}
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => calendarView === "month" ? navigateCalendarMonth(1) : navigateCalendarWeek(1)}
+                      aria-label={calendarView === "month" ? "Next month" : "Next week"}
+                      className="rounded-lg border border-[#E5E9E2] bg-white px-3 py-2 text-sm text-[#365B42] hover:bg-[#F6F8F4]"
+                    >
+                      Next {calendarView} →
+                    </button>
+                  </div>
+
+                  {calendarView === "month" ? (
+                    <>
+                      <div className="overflow-hidden rounded-2xl border border-[#E5E9E2] bg-white">
+                        <div className="grid grid-cols-7 border-b border-[#E5E9E2] bg-[#F6F8F4] text-center text-xs font-semibold text-[#68776C]">
+                          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+                            <div key={day} className="py-2">{day}</div>
+                          ))}
+                        </div>
+
+                        <div className="grid grid-cols-7">
+                          {calendarGrid.weeks.flat().map((day) => {
+                            const dayEvents = calendarEvents.dated.get(day.date) ?? [];
+                            const plannedCount = dayEvents.filter((event) => plannedSet.has(event.id)).length;
+                            const selected = selectedCalendarDate === day.date;
+
+                            return (
+                              <button
+                                key={day.date}
+                                type="button"
+                                aria-label={`${day.date}${dayEvents.length ? `, ${dayEvents.length} ${dayEvents.length === 1 ? "event" : "events"}` : ", no events"}`}
+                                aria-pressed={selected}
+                                onClick={() => {
+                                  setSelectedCalendarDate(day.date);
+                                  if (!day.inMonth) {
+                                    const [year, month] = day.date.split("-").map(Number);
+                                    setCalendarMonth({ year, month });
+                                  }
+                                }}
+                                className={`min-h-16 border-b border-r border-[#EEF0EB] p-1.5 text-left sm:min-h-20 sm:p-2 ${day.inMonth ? "text-[#243B30]" : "bg-[#FBFCFA] text-[#ADB5AE]"} ${selected ? "ring-2 ring-inset ring-[#567B60]" : "hover:bg-[#F6F8F4]"}`}
+                              >
+                                <span className="text-xs font-medium sm:text-sm">{day.day}</span>
+                                {dayEvents.length > 0 && (
+                                  <span className="mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[10px] font-semibold text-[#42674A] sm:text-xs">
+                                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#6A926B]" />
+                                    {dayEvents.length}
+                                    <span className="hidden sm:inline">{dayEvents.length === 1 ? "event" : "events"}</span>
+                                    {calendarScope === "all" && plannedCount > 0 && (
+                                      <span className="rounded bg-[#DDEBDD] px-1 text-[#26482D]">{plannedCount} planned</span>
+                                    )}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <section className="mt-6" aria-live="polite">
+                        <h3 className="mb-3 text-base font-semibold">
+                          {selectedCalendarDate ? displayDate(selectedCalendarDate) : "Select a date"}
+                        </h3>
+                        {selectedCalendarDate ? (
+                          (calendarEvents.dated.get(selectedCalendarDate) ?? []).length > 0 ? (
+                            <div className="space-y-3">
+                              {calendarEvents.dated.get(selectedCalendarDate)!.map((event) => (
+                                <CalendarEventRow
+                                  key={event.id}
+                                  event={event}
+                                  planned={plannedSet.has(event.id)}
+                                  onToggle={togglePlan}
+                                  emphasized={plannedSet.has(event.id)}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="rounded-xl border border-dashed border-[#DCE3D9] bg-white p-5 text-sm text-[#68776C]">
+                              No events on this date.
+                            </p>
+                          )
+                        ) : (
+                          <p className="text-sm text-[#89938A]">Choose a calendar date to see its events.</p>
+                        )}
+                      </section>
+                    </>
+                  ) : (
+                    <>
+                      <WeeklySchedule
+                        weekDates={weekDates}
+                        schedule={weeklySchedule}
+                        plannedIds={plannedSet}
+                        onToggle={togglePlan}
+                      />
+
+                      {calendarVisibleEvents.length === 0 && (
+                        <p className="mt-4 text-sm text-[#68776C]">No events are in this calendar view.</p>
+                      )}
+
+                      {weeklySchedule.untimed.length > 0 && (
+                        <section className="mt-6" aria-label="Events with time to be confirmed">
+                          <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#68776C]">
+                            Time to be confirmed this week
+                          </h3>
+                          <div className="space-y-3">
+                            {weeklySchedule.untimed.map((event) => (
+                              <CalendarEventRow
+                                key={event.id}
+                                event={event}
+                                planned={plannedSet.has(event.id)}
+                                onToggle={togglePlan}
+                                emphasized={plannedSet.has(event.id)}
+                              />
+                            ))}
+                          </div>
+                        </section>
+                      )}
+
+                      {weeklySchedule.outsideHours.length > 0 && (
+                        <section className="mt-6" aria-label="Events outside displayed hours">
+                          <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#68776C]">
+                            Outside displayed hours (7 AM–10 PM)
+                          </h3>
+                          <div className="space-y-3">
+                            {weeklySchedule.outsideHours.map((event) => (
+                              <CalendarEventRow
+                                key={event.id}
+                                event={event}
+                                planned={plannedSet.has(event.id)}
+                                onToggle={togglePlan}
+                                emphasized={plannedSet.has(event.id)}
+                              />
+                            ))}
+                          </div>
+                        </section>
+                      )}
+                    </>
+                  )}
+
+                  {calendarEvents.undated.length > 0 && (
+                    <section className="mt-8" aria-label="Events with date to be confirmed">
+                      <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#68776C]">
+                        Date to be confirmed
+                      </h3>
+                      <div className="space-y-3">
+                        {calendarEvents.undated.map((event) => (
+                          <CalendarEventRow
+                            key={event.id}
+                            event={event}
+                            planned={plannedSet.has(event.id)}
+                            onToggle={togglePlan}
+                            emphasized={plannedSet.has(event.id)}
+                          />
+                        ))}
+                      </div>
+                    </section>
+                  )}
+                </div>
+
               </div>
             ) : (
-              <div className="space-y-8">
-                {visibleGroups.dated.map(({ date, events: groupedEvents }) => (
-                  <section key={date} aria-label={`Events on ${displayDate(date)}`}>
-                    <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#365B42]">{displayDate(date)}</h3>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {groupedEvents.map((event) => <EventCard key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} />)}
-                    </div>
-                  </section>
-                ))}
-                {visibleGroups.undated.length > 0 && (
-                  <section aria-label="Events with date to be confirmed">
-                    <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#68776C]">Date to be confirmed</h3>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      {visibleGroups.undated.map((event) => <EventCard key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} />)}
-                    </div>
-                  </section>
-                )}
-                {selectedDate !== "all" && selectedDate !== "__undated__" && visibleGroups.dated.length === 0 && (
-                  <p className="rounded-2xl border border-dashed border-[#DCE3D9] bg-white p-8 text-center text-sm text-[#68776C]">No events are available for this date.</p>
-                )}
-                {selectedDate === "__undated__" && visibleGroups.undated.length === 0 && (
-                  <p className="rounded-2xl border border-dashed border-[#DCE3D9] bg-white p-8 text-center text-sm text-[#68776C]">No events have an unknown date.</p>
-                )}
-              </div>
-            )}
-            </> : (
               <div>
-                <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
+                <div className="mb-5 flex flex-wrap items-end gap-3">
                   <fieldset>
-                    <legend className="mb-1.5 text-xs font-medium text-[#68776C]">Calendar events</legend>
+                    <legend className="mb-1.5 text-xs font-medium text-[#68776C]">
+                      Browse
+                    </legend>
                     <div className="inline-flex rounded-xl border border-[#E5E9E2] bg-white p-1">
-                      <button type="button" aria-pressed={calendarScope === "all"} onClick={() => setCalendarScope("all")} className={`rounded-lg px-3 py-2 text-sm ${calendarScope === "all" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>All Events</button>
-                      <button type="button" aria-pressed={calendarScope === "planned"} onClick={() => setCalendarScope("planned")} className={`rounded-lg px-3 py-2 text-sm ${calendarScope === "planned" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>My Plan</button>
+                      <button
+                        type="button"
+                        aria-pressed={browseMode === "all"}
+                        onClick={() => setBrowseMode("all")}
+                        className={`rounded-lg px-3 py-2 text-sm ${
+                          browseMode === "all"
+                            ? "bg-[#254A38] text-white"
+                            : "text-[#68776C] hover:bg-[#F6F8F4]"
+                        }`}
+                      >
+                        All events
+                      </button>
+                      <button
+                        type="button"
+                        aria-pressed={browseMode === "date"}
+                        onClick={() => setBrowseMode("date")}
+                        className={`rounded-lg px-3 py-2 text-sm ${
+                          browseMode === "date"
+                            ? "bg-[#254A38] text-white"
+                            : "text-[#68776C] hover:bg-[#F6F8F4]"
+                        }`}
+                      >
+                        By date
+                      </button>
                     </div>
                   </fieldset>
-                  <fieldset>
-                    <legend className="mb-1.5 text-xs font-medium text-[#68776C]">Calendar view</legend>
-                    <div className="inline-flex rounded-xl border border-[#E5E9E2] bg-white p-1">
-                      <button type="button" aria-pressed={calendarView === "month"} onClick={() => setCalendarView("month")} className={`rounded-lg px-3 py-2 text-sm ${calendarView === "month" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>Month</button>
-                      <button type="button" aria-pressed={calendarView === "week"} onClick={() => setCalendarView("week")} className={`rounded-lg px-3 py-2 text-sm ${calendarView === "week" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>Week</button>
-                    </div>
-                  </fieldset>
+            
+                  {browseMode === "date" && (
+                    <label className="min-w-48 flex-1 sm:flex-none">
+                      <span className="mb-1.5 block text-xs font-medium text-[#68776C]">
+                        Select a date
+                      </span>
+                      <select
+                        value={selectedDate}
+                        onChange={(event) => setSelectedDate(event.target.value)}
+                        className="w-full rounded-xl border border-[#E5E9E2] bg-white px-3 py-2.5 text-sm text-[#243B30]"
+                      >
+                        <option value="all">All dates</option>
+                        {allDateGroups.dated.map(({ date }) => (
+                          <option key={date} value={date}>
+                            {displayDate(date)}
+                          </option>
+                        ))}
+                        {allDateGroups.undated.length > 0 && (
+                          <option value="__undated__">Date to be confirmed</option>
+                        )}
+                      </select>
+                    </label>
+                  )}
+            
+                  <label className="min-w-52 flex-1 sm:flex-none">
+                    <span className="mb-1.5 block text-xs font-medium text-[#68776C]">
+                      Sort
+                    </span>
+                    <select
+                      value={sortMode}
+                      onChange={(event) => setSortMode(event.target.value as SortMode)}
+                      className="w-full rounded-xl border border-[#E5E9E2] bg-white px-3 py-2.5 text-sm text-[#243B30]"
+                    >
+                      <option value="date">Date: earliest first</option>
+                      <option value="food">Confirmed food first</option>
+                    </select>
+                  </label>
+            
+                  <label className="min-w-52 flex-1 sm:flex-none">
+                    <span className="mb-1.5 block text-xs font-medium text-[#68776C]">
+                      Food cost
+                    </span>
+                    <select
+                      value={foodCostFilter}
+                      onChange={(event) =>
+                        setFoodCostFilter(event.target.value as FoodCostFilter)
+                      }
+                      className="w-full rounded-xl border border-[#E5E9E2] bg-white px-3 py-2.5 text-sm text-[#243B30]"
+                    >
+                      {foodCostFilterOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
                 </div>
-
-                {calendarScope === "planned" && plannedEvents.length === 0 && <p className="mb-4 rounded-xl border border-dashed border-[#DCE3D9] bg-white p-4 text-sm text-[#68776C]">Your plan is empty. Add an event from the Events view or All Events calendar.</p>}
-
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <button type="button" onClick={() => calendarView === "month" ? navigateCalendarMonth(-1) : navigateCalendarWeek(-1)} aria-label={calendarView === "month" ? "Previous month" : "Previous week"} className="rounded-lg border border-[#E5E9E2] bg-white px-3 py-2 text-sm text-[#365B42] hover:bg-[#F6F8F4]">← Previous {calendarView}</button>
-                  <h2 className="text-center text-xl font-semibold" aria-live="polite">{calendarView === "month" ? monthLabel : weekLabel}</h2>
-                  <button type="button" onClick={() => calendarView === "month" ? navigateCalendarMonth(1) : navigateCalendarWeek(1)} aria-label={calendarView === "month" ? "Next month" : "Next week"} className="rounded-lg border border-[#E5E9E2] bg-white px-3 py-2 text-sm text-[#365B42] hover:bg-[#F6F8F4]">Next {calendarView} →</button>
-                </div>
-
-                {calendarView === "month" ? <>
-                  <div className="overflow-hidden rounded-2xl border border-[#E5E9E2] bg-white">
-                    <div className="grid grid-cols-7 border-b border-[#E5E9E2] bg-[#F6F8F4] text-center text-xs font-semibold text-[#68776C]">
-                      {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => <div key={day} className="py-2">{day}</div>)}
-                    </div>
-                    <div className="grid grid-cols-7">
-                      {calendarGrid.weeks.flat().map((day) => {
-                        const dayEvents = calendarEvents.dated.get(day.date) ?? [];
-                        const plannedCount = dayEvents.filter((event) => plannedSet.has(event.id)).length;
-                        const selected = selectedCalendarDate === day.date;
-                        return <button key={day.date} type="button" aria-label={`${day.date}${dayEvents.length ? `, ${dayEvents.length} ${dayEvents.length === 1 ? "event" : "events"}` : ", no events"}`} aria-pressed={selected} onClick={() => { setSelectedCalendarDate(day.date); if (!day.inMonth) { const [year, month] = day.date.split("-").map(Number); setCalendarMonth({ year, month }); } }} className={`min-h-16 border-b border-r border-[#EEF0EB] p-1.5 text-left sm:min-h-20 sm:p-2 ${day.inMonth ? "text-[#243B30]" : "bg-[#FBFCFA] text-[#ADB5AE]"} ${selected ? "ring-2 ring-inset ring-[#567B60]" : "hover:bg-[#F6F8F4]"}`}>
-                          <span className="text-xs font-medium sm:text-sm">{day.day}</span>
-                          {dayEvents.length > 0 && <span className="mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[10px] font-semibold text-[#42674A] sm:text-xs"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-[#6A926B]" />{dayEvents.length} <span className="hidden sm:inline">{dayEvents.length === 1 ? "event" : "events"}</span>{calendarScope === "all" && plannedCount > 0 && <span className="rounded bg-[#DDEBDD] px-1 text-[#26482D]">{plannedCount} planned</span>}</span>}
-                        </button>;
-                      })}
-                    </div>
-                  </div>
-                  <section className="mt-6" aria-live="polite">
-                    <h3 className="mb-3 text-base font-semibold">{selectedCalendarDate ? displayDate(selectedCalendarDate) : "Select a date"}</h3>
-                    {selectedCalendarDate ? (
-                      (calendarEvents.dated.get(selectedCalendarDate) ?? []).length > 0 ? <div className="space-y-3">{calendarEvents.dated.get(selectedCalendarDate)!.map((event) => <CalendarEventRow key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} emphasized={plannedSet.has(event.id)} />)}</div> : <p className="rounded-xl border border-dashed border-[#DCE3D9] bg-white p-5 text-sm text-[#68776C]">No events on this date.</p>
-                    ) : <p className="text-sm text-[#89938A]">Choose a calendar date to see its events.</p>}
-                  </section>
-                </> : <>
-                  <WeeklySchedule weekDates={weekDates} schedule={weeklySchedule} plannedIds={plannedSet} onToggle={togglePlan} />
-                  {calendarVisibleEvents.length === 0 && <p className="mt-4 text-sm text-[#68776C]">No events are in this calendar view.</p>}
-                  {weeklySchedule.untimed.length > 0 && <section className="mt-6" aria-label="Events with time to be confirmed">
-                    <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#68776C]">Time to be confirmed this week</h3>
-                    <div className="space-y-3">{weeklySchedule.untimed.map((event) => <CalendarEventRow key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} emphasized={plannedSet.has(event.id)} />)}</div>
-                  </section>}
-                  {weeklySchedule.outsideHours.length > 0 && <section className="mt-6" aria-label="Events outside displayed hours">
-                    <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#68776C]">Outside displayed hours (7 AM–10 PM)</h3>
-                    <div className="space-y-3">{weeklySchedule.outsideHours.map((event) => <CalendarEventRow key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} emphasized={plannedSet.has(event.id)} />)}</div>
-                  </section>}
-                </>}
-
-                {calendarEvents.undated.length > 0 && <section className="mt-8" aria-label="Events with date to be confirmed">
-                  <h3 className="mb-3 border-b border-[#E3E8E0] pb-2 text-sm font-semibold text-[#68776C]">Date to be confirmed</h3>
-                  <div className="space-y-3">{calendarEvents.undated.map((event) => <CalendarEventRow key={event.id} event={event} planned={plannedSet.has(event.id)} onToggle={togglePlan} emphasized={plannedSet.has(event.id)} />)}</div>
-                </section>}
+            
+                <label className="mb-5 block">
+                  <span className="sr-only">Search events</span>
+                  <input
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="Search events, food, dates, or locations..."
+                    className="w-full rounded-xl border border-[#E5E9E2] bg-white px-4 py-3 text-sm outline-none transition focus:border-[#567B60]"
+                  />
+                </label>
+            
+                <EventMap
+                  events={mapEvents}
+                  plannedIds={plannedIds}
+                  onTogglePlan={togglePlan}
+                />
               </div>
             )}
-          </section>
+            </section>
+
 
           <aside id="planner" className="rounded-2xl border border-[#E7EAE3] bg-white p-5 lg:sticky lg:top-6">
             <div className="flex items-center justify-between">
