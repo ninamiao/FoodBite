@@ -3,6 +3,7 @@
 import json
 import unittest
 from pathlib import Path
+from extract import _find_free_food_evidence
 
 from scraper.curated_data import (
     derive_food_status,
@@ -16,6 +17,20 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 class FoodStatusTests(unittest.TestCase):
+    def test_free_hiv_testing_does_not_confirm_free_boba(self):
+        text = "Free HIV testing and boba drinks are available."
+        self.assertIsNone(_find_free_food_evidence(text))
+
+
+    def test_explicit_free_boba_is_confirmed(self):
+        text = "The first 40 free boba drinks are available."
+        self.assertIsNotNone(_find_free_food_evidence(text))
+
+
+    def test_food_provision_without_free_price_stays_unconfirmed(self):
+        text = "Refreshments will be provided before the event."
+        self.assertIsNone(_find_free_food_evidence(text))
+
     def test_food_and_free_food_are_both_required_for_confirmed_free(self):
         self.assertEqual(
             derive_food_status(True, True, "Snacks will be provided", "Free snacks are available"),

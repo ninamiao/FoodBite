@@ -10,9 +10,26 @@ from typing import Any
 FOOD_STATUS = {"confirmed_free", "provided_cost_unknown", "food_unconfirmed", "not_provided"}
 
 FOOD_MENTION_RE = re.compile(
-    r"\b(?:food|meals?|snacks?|refreshments?|pastr(?:y|ies)|pizza|boba|drinks?|catered|catering|"
-    r"beverages?|coffee|tea|juice|chocolate|pan dulce|produce|fruit|sandwich(?:es)?|"
-    r"tacos?|doughnuts?|donuts?|cookies?|bread|cocoa|lunch|dinner|breakfast|milk|water)\b",
+    r"\b(?:"
+    r"food|meals?|snacks?|refreshments?|"
+    r"pastr(?:y|ies)|pizza|boba|drinks?|"
+    r"catered|catering|beverages?|"
+    r"coffee|tea(?!m)|juice|chocolate|pan dulce|"
+    r"produce(?!r)|fruit|sandwich(?:es)?|"
+    r"tacos?|doughnuts?|donuts?|cookies?|"
+    r"bread(?!th)|cocoa|"
+    r"lunch(?!box(?:es)?)(?!\s+with\s+(?:the\s+)?chancellor)|"
+    r"dinner|breakfast|milk"
+    r")\b",
+    re.I,
+)
+
+WATER_PROVISION_RE = re.compile(
+    r"\b(?:"
+    r"bottled water|"
+    r"water\s+(?:will be\s+)?(?:provided|available|served)|"
+    r"(?:provided|available|served)\s+water"
+    r")\b",
     re.I,
 )
 
@@ -26,33 +43,40 @@ _NON_FOOD_CONTEXT_REPLACEMENTS = (
 
 
 def food_relevance_reason(event: dict[str, Any]) -> str | None:
-    """Return why source content belongs in FreeBite, or None if irrelevant.
+    """Return why source-supported food information belongs in FreeBite.
 
-    Food-status values that already establish provision are retained. Otherwise,
-    actual food-related source mentions qualify for review, while common
-    non-provision contexts (sports, attendee-supplied water, metaphors, and
-    historical lunchbox exhibits) are ignored.
+    Only food-specific fields count as evidence. General event titles and
+    descriptions are intentionally excluded to avoid matching incidental
+    words in book titles, talks, and other unrelated content.
     """
     if event.get("food_status") in {"confirmed_free", "provided_cost_unknown"}:
         return "Food provision is explicitly supported by the curated status."
 
     evidence = event.get("evidence") or {}
     extraction_evidence = event.get("extraction_evidence") or {}
+
     values = [
         event.get("title"),
         event.get("description"),
         event.get("food_description"),
         evidence.get("provides_food"),
-        evidence.get("food_description"),
-        extraction_evidence.get("provides_food"),
-        extraction_evidence.get("food_description"),
     ]
-    source_text = " ".join(value for value in values if isinstance(value, str) and value.strip())
+
+    source_text = " ".join(
+        value for value in values
+        if isinstance(value, str) and value.strip()
+    )
+
     contextual_text = source_text
     for pattern in _NON_FOOD_CONTEXT_REPLACEMENTS:
         contextual_text = pattern.sub(" ", contextual_text)
+
     if FOOD_MENTION_RE.search(contextual_text):
-        return "The source explicitly mentions food or a beverage; provision remains uncertain."
+        return "A food-specific source field mentions food or a beverage; cost may need review."
+
+    if WATER_PROVISION_RE.search(contextual_text):
+        return "The source indicates that water is provided; cost may need review."
+
     return None
 
 

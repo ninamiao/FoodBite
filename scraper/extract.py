@@ -553,8 +553,14 @@ def validate_events(
             # constrain matching for later events in the same response.
             event_records = [{"title": fallback_title, "text": source_text, "event_url": event.get("event_url") or ""}]
         response_url = normalize_text(event.get("event_url") or "")
-        url_matches = [record for record in event_records if response_url and record.get("event_url") == response_url]
-        matched = url_matches[0] if url_matches else None
+        url_matches = [
+            record for record in event_records
+            if response_url and record.get("event_url") == response_url
+        ]
+        matched = max(
+            url_matches,
+            key=lambda record: len(record.get("text", "")),
+        ) if url_matches else None
         if matched is None:
             title_matches = [record for record in event_records if normalize_text(record.get("title", "")).casefold() == event["title"].casefold()]
             if len(title_matches) > 1 and evidence.get("date"):
@@ -760,14 +766,11 @@ def _canonicalize_extracted_event(event: dict[str, Any]) -> dict[str, Any]:
     canonical.setdefault("review_warnings", [])
     canonical.setdefault("conditions", [])
     evidence = canonical.get("evidence") or {}
-    canonical.setdefault(
-        "food_status",
-        derive_food_status(
-            canonical.get("provides_food"),
-            canonical.get("is_free"),
-            evidence.get("provides_food"),
-            evidence.get("is_free"),
-        ),
+    canonical["food_status"] = derive_food_status(
+        canonical.get("provides_food"),
+        canonical.get("is_free"),
+        evidence.get("provides_food"),
+        evidence.get("is_free"),
     )
     canonical["source_records"] = _event_source_records(canonical)
     canonical["source_urls"] = list(dict.fromkeys(
