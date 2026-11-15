@@ -1,0 +1,70 @@
+name: Daily FreeBite Event Scrape
+
+on:
+  schedule:
+    # 18:00 UTC = 10:00 AM San Diego in PST, 11:00 AM in PDT
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-event-scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      RUN_ID: ${{ github.run_id }}
+      BRIGHTDATA_API_KEY: ${{ secrets.BRIGHTDATA_API_KEY }}
+      BRIGHTDATA_ZONE: ${{ secrets.BRIGHTDATA_ZONE }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scraper/requirements.txt
+
+      - name: Fetch UCSD events page
+        run: |
+          python scraper/scrape.py \
+            "https://calendar.ucsd.edu/student-life" \
+            --confirm-request \
+            --output-dir "data/scrape_runs/${RUN_ID}"
+
+      - name: Extract and validate events
+        run: |
+          HTML_FILE="$(find "data/scrape_runs/${RUN_ID}" \
+            -maxdepth 1 -type f -name '*.html' -print -quit)"
+
+          test -n "$HTML_FILE"
+
+          python scraper/extract.py "$HTML_FILE" \
+            --source-url "https://calendar.ucsd.edu/student-life" \
+            --output "data/events.json" \
+            --run-dir "data/extraction_runs/${RUN_ID}" \
+            --confirm-api
+
+      - name: Upload scrape and extraction artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: freebite-run-${{ github.run_id }}
+          path: |
+            data/scrape_runs/${{ github.run_id }}/
+            data/extraction_runs/${{ github.run_id }}/
+          if-no-files-found: warn
+          retention-days: 30

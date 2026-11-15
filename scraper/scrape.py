@@ -223,14 +223,22 @@ def read_html_response(response: requests.Response) -> str:
     return html
 
 
-def save_html(target_url: str, html: str) -> Path:
+def save_html(
+    target_url: str,
+    html: str,
+    output_dir: Path | None = None,
+) -> Path:
     """Save HTML under data/ without replacing any existing file."""
     parsed = urlparse(target_url)
     host = re.sub(r"[^A-Za-z0-9_-]+", "_", parsed.hostname or "page").strip("_")
     path_slug = re.sub(r"[^A-Za-z0-9_-]+", "_", parsed.path).strip("_")
     stem = "_".join(part for part in (host, path_slug) if part) or "page"
     stem = stem[:100]
-    output_dir = PROJECT_ROOT / "data"
+    if output_dir is None:
+        output_dir = PROJECT_ROOT / "data"
+    elif not output_dir.is_absolute():
+        output_dir = PROJECT_ROOT / output_dir
+
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Exclusive creation makes the no-overwrite guarantee hold even if two
@@ -268,6 +276,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="Send exactly one real request. This can use Bright Data credits.",
     )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=PROJECT_ROOT / "data",
+        help="Directory where the fetched HTML will be saved.",
+    )
     return parser.parse_args(argv)
 
 
@@ -293,7 +307,7 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         html = fetch_html(target_url, api_key, zone)
-        output_path = save_html(target_url, html)
+        output_path = save_html(target_url, html, args.output_dir)
     except ScrapeError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
