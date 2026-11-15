@@ -191,7 +191,22 @@ function EventCard({
       )}
 
       {description?.kind === "description" && (
-        <p className="mt-3 line-clamp-3 text-sm leading-5 text-[#849087]">{description.text}</p>
+        <>
+          <p className="mt-3 line-clamp-3 text-sm leading-5 text-[#849087]">
+            {description.text}
+          </p>
+
+          {event.event_url && (
+            <a
+              href={event.event_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1.5 inline-block text-xs font-semibold text-[#42674A] hover:text-[#254A38] hover:underline"
+            >
+              View event details ↗
+            </a>
+          )}
+        </>
       )}
 
       <details className="mt-4 text-xs text-[#68776C]">
