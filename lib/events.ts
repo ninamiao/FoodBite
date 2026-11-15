@@ -356,10 +356,12 @@ const searchAliases: Record<string, string[]> = {
   sweet: ["sweet", "dessert", "pastry", "pastries", "boba", "cookies", "chocolate"],
 };
 
+
 function containsSearchTerm(text: string, term: string): boolean {
   const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(?:^|[^a-z0-9])${escaped}(?=$|[^a-z0-9])`, "i").test(text);
+  return new RegExp(`(?:^|[^a-z0-9])${escaped}[a-z0-9]*(?=$|[^a-z0-9])`, "i").test(text);
 }
+
 
 function searchableContent(values: Array<string | null>): string {
   return values
