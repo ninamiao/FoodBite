@@ -230,12 +230,24 @@ function EventCard({
 }
 
 export default function EventDashboard({ events }: { events: CuratedEvent[] }) {
-  const initialMonth = new Date();
   const [viewMode, setViewMode] = useState<"events" | "calendar">("events");
   const [calendarView, setCalendarView] = useState<"month" | "week">("month");
   const [calendarScope, setCalendarScope] = useState<CalendarEventScope>("all");
-  const [calendarMonth, setCalendarMonth] = useState({ year: initialMonth.getFullYear(), month: initialMonth.getMonth() + 1 });
-  const [weekAnchor, setWeekAnchor] = useState(() => `${initialMonth.getFullYear()}-${String(initialMonth.getMonth() + 1).padStart(2, "0")}-${String(initialMonth.getDate()).padStart(2, "0")}`);
+  const [calendarMonth, setCalendarMonth] = useState({ year: 2000, month: 1 });
+  const [weekAnchor, setWeekAnchor] = useState("2000-01-01");
+  
+  useEffect(() => {
+    const today = new Date();
+  
+    setCalendarMonth({
+      year: today.getFullYear(),
+      month: today.getMonth() + 1,
+    });
+  
+    setWeekAnchor(
+      `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`
+    );
+  }, []);
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("date");
