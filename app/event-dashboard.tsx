@@ -99,7 +99,7 @@ function WeeklySchedule({
   const scheduleHeight = (22 - 7) * pxPerHour;
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-[#E5E9E2] bg-white">
+    <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-xl border border-[#E5E9E2] bg-white">
       <div className="min-w-[980px]">
         <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))] border-b border-[#E5E9E2] bg-[#F6F8F4]">
           <div />
@@ -411,7 +411,7 @@ export default function EventDashboard({
         </header>
 
         <div className="grid items-start gap-8 lg:grid-cols-[1fr_320px]">
-          <section id="discover">
+          <section id="discover" className="min-w-0">
             <div className="mb-5 inline-flex rounded-xl border border-[#E5E9E2] bg-white p-1">
               <button type="button" aria-pressed={viewMode === "events"} onClick={() => setViewMode("events")} className={`rounded-lg px-3 py-2 text-sm ${viewMode === "events" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>Events</button>
               <button type="button" aria-pressed={viewMode === "calendar"} onClick={() => setViewMode("calendar")} className={`rounded-lg px-3 py-2 text-sm ${viewMode === "calendar" ? "bg-[#254A38] text-white" : "text-[#68776C] hover:bg-[#F6F8F4]"}`}>Calendar</button>
@@ -572,7 +572,7 @@ export default function EventDashboard({
 
                   {calendarView === "month" ? (
                     <>
-                      <div className="overflow-hidden rounded-2xl border border-[#E5E9E2] bg-white">
+                      <div className="w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-[#E5E9E2] bg-white">
                         <div className="grid grid-cols-7 border-b border-[#E5E9E2] bg-[#F6F8F4] text-center text-xs font-semibold text-[#68776C]">
                           {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
                             <div key={day} className="py-2">{day}</div>
@@ -598,7 +598,7 @@ export default function EventDashboard({
                                     setCalendarMonth({ year, month });
                                   }
                                 }}
-                                className={`min-h-16 border-b border-r border-[#EEF0EB] p-1.5 text-left sm:min-h-20 sm:p-2 ${day.inMonth ? "text-[#243B30]" : "bg-[#FBFCFA] text-[#ADB5AE]"} ${selected ? "ring-2 ring-inset ring-[#567B60]" : "hover:bg-[#F6F8F4]"}`}
+                                className={`min-w-0 min-h-16 border-b border-r border-[#EEF0EB] p-1.5 text-left sm:min-h-20 sm:p-2 ${day.inMonth ? "text-[#243B30]" : "bg-[#FBFCFA] text-[#ADB5AE]"} ${selected ? "ring-2 ring-inset ring-[#567B60]" : "hover:bg-[#F6F8F4]"}`}
                               >
                                 <span className="text-xs font-medium sm:text-sm">{day.day}</span>
                                 {dayEvents.length > 0 && (
