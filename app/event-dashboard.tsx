@@ -76,6 +76,7 @@ function CalendarEventRow({ event, planned, onToggle, emphasized = false }: { ev
   );
 }
 
+
 function WeeklySchedule({
   weekDates,
   schedule,
@@ -88,39 +89,131 @@ function WeeklySchedule({
   onToggle: (id: string) => void;
 }) {
   const hourLabels = Array.from({ length: 16 }, (_, index) => index + 7);
-  const formatDay = (value: string) => new Date(`${value}T00:00:00.000Z`).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "UTC" });
+
+  const formatDay = (value: string) =>
+    new Date(`${value}T00:00:00.000Z`).toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+
   const getBlockStyle = (positioned: PositionedScheduleEvent) => ({
-    top: `${positioned.top}px`,
-    height: `${positioned.height}px`,
+    top: `calc(var(--calendar-scale) * ${positioned.top}px)`,
+    height: `calc(var(--calendar-scale) * ${positioned.height}px)`,
     left: `calc(${(positioned.column * 100) / positioned.columns}% + 2px)`,
     width: `calc(${100 / positioned.columns}% - 4px)`,
   });
+
   const pxPerHour = 56;
-  const scheduleHeight = (22 - 7) * pxPerHour;
+  const scheduleHeight = 15 * pxPerHour;
 
   return (
-    <div className="w-full min-w-0 max-w-full overflow-x-auto rounded-xl border border-[#E5E9E2] bg-white">
-      <div className="min-w-[980px]">
+    <div className="w-full min-w-0 max-w-full overflow-x-auto overflow-y-hidden sm:overflow-x-hidden sm:overflow-y-hidden rounded-xl border border-[#E5E9E2] bg-white">
+      <div className="min-w-[980px] sm:min-w-0 [--calendar-scale:0.7142857] sm:[--calendar-scale:1]">
         <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))] border-b border-[#E5E9E2] bg-[#F6F8F4]">
           <div />
-          {weekDates.map((date) => <div key={date} className="border-l border-[#E5E9E2] px-2 py-3 text-center text-xs font-semibold text-[#365B42]">{formatDay(date)}</div>)}
-        </div>
-        <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))]">
-          <div className="relative text-[10px] text-[#89938A]" style={{ height: scheduleHeight }}>
-            {hourLabels.map((hour) => <span key={hour} className="absolute right-2 -translate-y-1/2" style={{ top: `${(hour - 7) * pxPerHour}px` }}>{hour % 12 || 12}{hour < 12 ? " AM" : " PM"}</span>)}
-          </div>
           {weekDates.map((date) => (
-            <div key={date} className="relative border-l border-[#E5E9E2]" style={{ height: scheduleHeight }}>
-              {hourLabels.slice(0, -1).map((hour) => <div key={hour} className="pointer-events-none absolute inset-x-0 border-t border-[#EEF0EB]" style={{ top: `${(hour - 7) * pxPerHour}px` }} />)}
+            <div
+              key={date}
+              className="border-l border-[#E5E9E2] px-2 py-2 text-center text-xs font-semibold text-[#365B42] sm:py-3"
+            >
+              {formatDay(date)}
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))]">
+          <div
+            className="relative text-[10px] text-[#89938A]"
+            style={{
+              height: `calc(var(--calendar-scale) * ${scheduleHeight}px)`,
+            }}
+          >
+            {hourLabels.map((hour) => (
+              <span
+                key={hour}
+                className="absolute right-2 -translate-y-1/2"
+                style={{
+                  top: `calc(var(--calendar-scale) * ${(hour - 7) * pxPerHour}px)`,
+                }}
+              >
+                {hour % 12 || 12}{hour < 12 ? " AM" : " PM"}
+              </span>
+            ))}
+          </div>
+
+          {weekDates.map((date) => (
+            <div
+              key={date}
+              className="relative border-l border-[#E5E9E2]"
+              style={{
+                height: `calc(var(--calendar-scale) * ${scheduleHeight}px)`,
+              }}
+            >
+              {hourLabels.slice(0, -1).map((hour) => (
+                <div
+                  key={hour}
+                  className="pointer-events-none absolute inset-x-0 border-t border-[#EEF0EB]"
+                  style={{
+                    top: `calc(var(--calendar-scale) * ${(hour - 7) * pxPerHour}px)`,
+                  }}
+                />
+              ))}
+
               {(schedule.byDate.get(date) ?? []).map((positioned) => {
                 const planned = plannedIds.has(positioned.event.id);
-                return <article key={positioned.event.id} style={getBlockStyle(positioned)} title={`${positioned.event.title} · ${displayTime(positioned.event)} · ${displayLocation(positioned.event.location)}`} className={`absolute z-10 overflow-hidden rounded-md p-1.5 text-[10px] leading-tight shadow-sm sm:p-2 ${planned ? "border-2 border-[#557F58] bg-[#DDEBDD] text-[#26482D]" : "border border-[#AFC4AF] bg-[#F1F6EF] text-[#344B3B]"}`}>
-                  <p className="line-clamp-2 font-semibold">{positioned.event.title}</p>
-                  <p className="mt-1 font-medium">{displayTime(positioned.event)}</p>
-                  {positioned.height >= 74 && <p className="mt-1 line-clamp-2 text-[#647467]">{displayLocation(positioned.event.location)}</p>}
-                  {positioned.height >= 74 && <button type="button" onClick={() => onToggle(positioned.event.id)} aria-pressed={planned} className="mt-1 rounded bg-white/70 px-1.5 py-0.5 font-semibold hover:bg-white">{planned ? "Remove" : "+ Plan"}</button>}
-                  {positioned.height < 74 && <button type="button" onClick={() => onToggle(positioned.event.id)} aria-label={`${planned ? "Remove" : "Add"} ${positioned.event.title} ${planned ? "from" : "to"} plan`} aria-pressed={planned} className="absolute right-1 top-1 rounded bg-white/80 px-1.5 py-0.5 font-semibold">{planned ? "✓" : "+"}</button>}
-                </article>;
+
+                return (
+                  <article
+                    key={positioned.event.id}
+                    style={getBlockStyle(positioned)}
+                    title={`${positioned.event.title} · ${displayTime(positioned.event)} · ${displayLocation(positioned.event.location)}`}
+                    className={`absolute z-10 overflow-hidden rounded-md p-1 text-[10px] leading-tight shadow-sm sm:p-2 ${
+                      planned
+                        ? "border-2 border-[#557F58] bg-[#DDEBDD] text-[#26482D]"
+                        : "border border-[#AFC4AF] bg-[#F1F6EF] text-[#344B3B]"
+                    }`}
+                  >
+                    <p className="line-clamp-2 pr-5 font-semibold">
+                      {positioned.event.title}
+                    </p>
+
+                    <p className="mt-0.5 truncate font-medium sm:mt-1">
+                      {displayTime(positioned.event)}
+                    </p>
+
+                    {positioned.height >= 74 && (
+                      <p className="mt-1 hidden line-clamp-2 text-[#647467] sm:block">
+                        {displayLocation(positioned.event.location)}
+                      </p>
+                    )}
+
+                    {positioned.height >= 74 && (
+                      <button
+                        type="button"
+                        onClick={() => onToggle(positioned.event.id)}
+                        aria-label={`${planned ? "Remove" : "Add"} ${positioned.event.title} ${planned ? "from" : "to"} plan`}
+                        aria-pressed={planned}
+                        className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded bg-white/90 text-[11px] font-bold shadow-sm hover:bg-white"
+                      >
+                        {planned ? "✓" : "+"}
+                      </button>
+                    )}
+
+                    {positioned.height < 74 && (
+                      <button
+                        type="button"
+                        onClick={() => onToggle(positioned.event.id)}
+                        aria-label={`${planned ? "Remove" : "Add"} ${positioned.event.title} ${planned ? "from" : "to"} plan`}
+                        aria-pressed={planned}
+                        className="absolute right-1 top-1 z-20 flex h-5 w-5 items-center justify-center rounded bg-white/90 text-[11px] font-bold shadow-sm hover:bg-white"
+                      >
+                        {planned ? "✓" : "+"}
+                      </button>
+                    )}
+                  </article>
+                );
               })}
             </div>
           ))}
@@ -129,6 +222,7 @@ function WeeklySchedule({
     </div>
   );
 }
+
 
 const badgeStyles = {
   status: "",
