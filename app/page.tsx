@@ -5,5 +5,10 @@ import type { EventDataset } from "../lib/events";
 const dataset = eventData as EventDataset;
 
 export default function Home() {
-  return <EventDashboard events={dataset.events} />;
+  return (
+    <EventDashboard
+      events={dataset.events}
+      reviewedAt={dataset.reviewed_at}
+    />
+  );
 }

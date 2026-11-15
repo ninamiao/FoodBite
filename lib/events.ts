@@ -359,7 +359,13 @@ const searchAliases: Record<string, string[]> = {
 
 function containsSearchTerm(text: string, term: string): boolean {
   const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return new RegExp(`(?:^|[^a-z0-9])${escaped}[a-z0-9]*(?=$|[^a-z0-9])`, "i").test(text);
+
+  const pattern =
+    term.length <= 3
+      ? `(?:^|[^a-z0-9])${escaped}(?=$|[^a-z0-9])`
+      : `(?:^|[^a-z0-9])${escaped}[a-z0-9]*(?=$|[^a-z0-9])`;
+
+  return new RegExp(pattern, "i").test(text);
 }
 
 

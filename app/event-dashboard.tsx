@@ -229,7 +229,13 @@ function EventCard({
   );
 }
 
-export default function EventDashboard({ events }: { events: CuratedEvent[] }) {
+export default function EventDashboard({
+  events,
+  reviewedAt,
+}: {
+  events: CuratedEvent[];
+  reviewedAt: string;
+}) {
   const [viewMode, setViewMode] = useState<"events" | "calendar">("events");
   const [calendarView, setCalendarView] = useState<"month" | "week">("month");
   const [calendarScope, setCalendarScope] = useState<CalendarEventScope>("all");
@@ -358,6 +364,14 @@ export default function EventDashboard({ events }: { events: CuratedEvent[] }) {
       <div className="mx-auto max-w-7xl px-6 pb-20">
         <header className="mb-10 mt-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#89958B]">UC San Diego · Free Food Event Listings</p>
+          <p className="mt-2 text-xs text-[#89958B]">
+            Last updated:{" "}
+            {new Date(`${reviewedAt}T00:00:00`).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
+          </p>
           <h1 className="mt-3 text-4xl font-semibold tracking-tight sm:text-5xl">Plan less. Eat better.</h1>
           <p className="mt-3 text-sm text-[#849087]">
             Browse reviewed events. Food details and cost are labeled only when the source supports them.
