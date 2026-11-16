@@ -1,9 +1,9 @@
 name: Daily FreeBite Event Scrape
 
 on:
-  schedule:
+  # schedule:
     # 18:00 UTC = 10:00 AM San Diego in PST, 11:00 AM in PDT
-    - cron: "0 18 * * *"
+   # - cron: "0 18 * * *"
   workflow_dispatch:
 
 permissions:
